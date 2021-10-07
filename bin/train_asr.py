@@ -14,6 +14,8 @@ class Solver(BaseSolver):
         super().__init__(config, paras, mode)
         # Logger settings
         self.best_wer = {'att': 3.0, 'ctc': 3.0}
+        self.eval_stats = {'total_loss': 1000, "ctc_loss": 1000, "ctc_wer": 3, "att_wer": 3}
+        self.train_stats = {'total_loss': 1000, "ctc_loss": 1000, "ctc_wer": 3, "att_wer": 3}
         # Curriculum learning affects data loader
         self.curriculum = self.config['hparas']['curriculum']
 
@@ -79,10 +81,13 @@ class Solver(BaseSolver):
         self.verbose('Total training steps {}.'.format(
             human_format(self.max_step)))
         ctc_loss, att_loss, emb_loss = None, None, None
+
         n_epochs = 0
         self.timer.set()
 
         while self.step < self.max_step:
+            running_ctc = 0
+            running_ctc_count = 0
             # Renew dataloader to enable random sampling
             if self.curriculum > 0 and n_epochs == self.curriculum:
                 self.verbose(
@@ -90,10 +95,14 @@ class Solver(BaseSolver):
                 self.tr_set, _, _, _, _, _ = \
                     load_dataset(self.paras.njobs, self.paras.gpu, self.paras.pin_memory,
                                  False, **self.config['data'])
+            # data_processed = 0
             for data in self.tr_set:
                 # Pre-step : update tf_rate/lr_rate and do zero_grad
+                # data_processed += len(data)
+                # print("data_processed", data_processed)
                 tf_rate = self.optimizer.pre_step(self.step)
                 total_loss = 0
+                total_ctc = 0
 
                 # Fetch data
                 feat, feat_len, txt, txt_len = self.fetch_data(data)
@@ -124,6 +133,13 @@ class Solver(BaseSolver):
                             0, 1), txt, encode_len, txt_len)
                     total_loss += ctc_loss*self.model.ctc_weight
 
+                    running_ctc += ctc_loss.item()
+                    running_ctc_count += 1
+
+                    if running_ctc_count % 200 == 0:
+                        pass
+                    total_ctc += ctc_loss.item()
+
                 if att_output is not None:
                     b, t, _ = att_output.shape
                     att_output = fuse_output if self.emb_fuse else att_output
@@ -137,15 +153,22 @@ class Solver(BaseSolver):
                 grad_norm = self.backward(total_loss)
                 self.step += 1
 
+
                 # Logger
                 if (self.step == 1) or (self.step % self.PROGRESS_STEP == 0):
+                    tr_loss = total_loss.cpu().item()
+                    tr_ctc_loss = running_ctc / running_ctc_count
+                    tr_att_wer = cal_er(self.tokenizer, att_output, txt)
+                    tr_ctc_wer = cal_er(self.tokenizer, ctc_output, txt, ctc=True)
+                    self.train_stats = {'total_loss': tr_loss, "ctc_loss": tr_ctc_loss, "ctc_wer": tr_ctc_wer, "att_wer": tr_att_wer}
+
                     self.progress('Tr stat | Loss - {:.2f} | Grad. Norm - {:.2f} | {}'
-                                  .format(total_loss.cpu().item(), grad_norm, self.timer.show()))
+                                  .format(tr_loss, grad_norm, self.timer.show()))
                     self.write_log(
                         'loss', {'tr_ctc': ctc_loss, 'tr_att': att_loss})
                     self.write_log('emb_loss', {'tr': emb_loss})
-                    self.write_log('wer', {'tr_att': cal_er(self.tokenizer, att_output, txt),
-                                           'tr_ctc': cal_er(self.tokenizer, ctc_output, txt, ctc=True)})
+                    self.write_log('wer', {'tr_att': tr_ctc_wer,
+                                           'tr_ctc': tr_att_wer})
                     if self.emb_fuse:
                         if self.emb_decoder.fuse_learnable:
                             self.write_log('fuse_lambda', {
@@ -157,6 +180,17 @@ class Solver(BaseSolver):
                 if (self.step == 1) or (self.step % self.valid_step == 0):
                     self.validate()
 
+                    # tr_loss = total_loss.cpu().item()
+                    # tr_ctc_loss = running_ctc / self.step
+                    # tr_ctc_wer = cal_er(self.tokenizer, att_output, txt)
+                    # tr_att_wer = cal_er(self.tokenizer, ctc_output, txt, ctc=True)
+                    # self.train_stats = {'total_loss': tr_loss, "ctc_loss": tr_ctc_loss, "ctc_wer": tr_ctc_wer,
+                    #                     "att_wer": tr_att_wer}
+
+                    self.print_msg("Eval", n_epochs)
+                    self.print_msg("Train", n_epochs)
+                    print("total_loss", total_loss)
+
                 # End of step
                 # https://github.com/pytorch/pytorch/issues/13246#issuecomment-529185354
                 torch.cuda.empty_cache()
@@ -164,6 +198,10 @@ class Solver(BaseSolver):
                 if self.step > self.max_step:
                     break
             n_epochs += 1
+
+            # print("Epoch: ", n_epochs, "\t CTCLoss: ", running_ctc)
+
+
         self.log.close()
 
     def validate(self):
@@ -173,6 +211,7 @@ class Solver(BaseSolver):
             self.emb_decoder.eval()
         dev_wer = {'att': [], 'ctc': []}
 
+        total_ctc_loss = 0
         for i, data in enumerate(self.dv_set):
             self.progress('Valid step - {}/{}'.format(i+1, len(self.dv_set)))
             # Fetch data
@@ -184,6 +223,9 @@ class Solver(BaseSolver):
                     self.model(feat, feat_len, int(max(txt_len)*self.DEV_STEP_RATIO),
                                emb_decoder=self.emb_decoder)
 
+            ctc_loss = self.ctc_loss(ctc_output.transpose(
+                0, 1), txt, encode_len, txt_len)
+            total_ctc_loss += ctc_loss
             dev_wer['att'].append(cal_er(self.tokenizer, att_output, txt))
             dev_wer['ctc'].append(cal_er(self.tokenizer, ctc_output, txt, ctc=True))
 
@@ -203,8 +245,11 @@ class Solver(BaseSolver):
                                                                                      ignore_repeat=True))
 
         # Ckpt if performance improves
+        validationb_ctc_loss = total_ctc_loss.item()/len(self.dv_set)
+        self.eval_stats['ctc_loss'] = validationb_ctc_loss
         for task in ['att', 'ctc']:
             dev_wer[task] = sum(dev_wer[task])/len(dev_wer[task])
+            self.eval_stats[(task + '_wer')] = dev_wer[task]
             if dev_wer[task] < self.best_wer[task]:
                 self.best_wer[task] = dev_wer[task]
                 self.save_checkpoint('best_{}.pth'.format(task), 'wer', dev_wer[task])
@@ -215,3 +260,30 @@ class Solver(BaseSolver):
         self.model.train()
         if self.emb_decoder is not None:
             self.emb_decoder.train()
+        # return validationb_ctc_loss
+
+    def print_msg(self, mode, epoch):
+        stats_dict = self.eval_stats if mode =='Eval' else self.train_stats
+        ctc_loss = stats_dict['ctc_loss']
+        att_wer = stats_dict['att_wer']
+        ctc_wer = stats_dict['ctc_wer']
+        msg = 'Extractor: {model_name}\t' \
+              '{mode}\t' \
+              'Epoch {epoch}\t' \
+              'Step {step}\t' \
+              'CTC Loss {ctc_loss:.5f}\t' \
+              'WER(att) {att_wer:.5f}\t' \
+              '(ctc) {ctc_wer:.5f}\t' \
+              'lr {lr}\t' \
+              'ctc_weight {ctc_weight}\t' \
+            .format(model_name=self.config['model']['encoder']['prenet'],
+                    mode=mode,
+                    epoch=epoch,
+                    step=self.step,
+                    ctc_loss=ctc_loss,
+                    att_wer=att_wer,
+                    ctc_wer=ctc_wer,
+                    ctc_weight=self.config['model']['ctc_weight'],
+                    lr=""
+                    )
+        print(msg)

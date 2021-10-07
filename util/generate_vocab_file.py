@@ -56,10 +56,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.mode != "subword":
-        logging.warn(
-            "`character_coverage` is not used in `word` and `character` mode.")
-    if args.mode == "character":
-        logging.warn("`vocab_size` is not used in `character` mode.")
+    # if args.mode != "subword":
+    #     logging.warn(
+    #         "`character_coverage` is not used in `word` and `character` mode.")
+    # if args.mode == "character":
+    #     logging.warn("`vocab_size` is not used in `character` mode.")
 
     main(args)

@@ -13,5 +13,6 @@ decode:
   max_len_ratio: 0.07
   lm_path: 'ckpt/lm_example_sd0/best_ppx.pth'
   lm_config: 'config/libri/lm_example.yaml'
-  lm_weight: 0.5
+#  lm_weight: 0.5
   ctc_weight: 0.0
+  lm_weight: 0.0

@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch.distributions.categorical import Categorical
 
 from src.util import init_weights, init_gate
-from src.module import VGGExtractor, CNNExtractor, RNNLayer, ScaleDotAttention, LocationAwareAttention
+from src.module import VGGExtractor, CNNExtractor, RNNLayer, ScaleDotAttention, LocationAwareAttention, MLPExtractor
 
 
 class ASR(nn.Module):
@@ -323,11 +323,12 @@ class Encoder(nn.Module):
         # Hyper-parameters checking
         self.vgg = prenet == 'vgg'
         self.cnn = prenet == 'cnn'
+        self.mlp = prenet == 'mlp'
         self.sample_rate = 1
         assert len(sample_rate) == len(dropout), 'Number of layer mismatch'
         assert len(dropout) == len(dim), 'Number of layer mismatch'
         num_layers = len(dim)
-        assert num_layers >= 1, 'Encoder should have at least 1 layer'
+        # assert num_layers >= 1, 'Encoder should have at least 1 layer'
 
         # Construct model
         module_list = []
@@ -338,12 +339,18 @@ class Encoder(nn.Module):
             vgg_extractor = VGGExtractor(input_size)
             module_list.append(vgg_extractor)
             input_dim = vgg_extractor.out_dim
-            self.sample_rate = self.sample_rate*4
+            # self.sample_rate = self.sample_rate*4
         if self.cnn:
             cnn_extractor = CNNExtractor(input_size, out_dim=dim[0])
             module_list.append(cnn_extractor)
             input_dim = cnn_extractor.out_dim
-            self.sample_rate = self.sample_rate*4
+            # self.sample_rate = self.sample_rate*4
+        if self.mlp:
+            mlp_extractor = MLPExtractor(input_size*4, out_dim=dim[0])
+            module_list.append(mlp_extractor)
+            input_dim = mlp_extractor.out_dim
+            # self.sample_rate = self.sample_rate*4
+        self.sample_rate *= 4
 
         # Recurrent encoder
         if module in ['LSTM', 'GRU']:

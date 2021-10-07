@@ -9,7 +9,7 @@ OFFICIAL_TXT_SRC = ['librispeech-lm-norm.txt']
 # Remove longest N sentence in librispeech-lm-norm.txt
 REMOVE_TOP_N_TXT = 5000000
 # Default num. of threads used for loading LibriSpeech
-READ_FILE_THREADS = 4
+READ_FILE_THREADS = 1
 
 
 def read_text(file):

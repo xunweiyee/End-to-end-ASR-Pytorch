@@ -43,7 +43,8 @@ class VGGExtractor(nn.Module):
 
     def view_input(self, feature, feat_len):
         # downsample time
-        feat_len = feat_len//4
+        # feat_len = feat_len//4
+        feat_len = torch.div(feat_len, 4, rounding_mode='floor')
         # crop sequence s.t. t%4==0
         if feature.shape[1] % 4 != 0:
             feature = feature[:, :-(feature.shape[1] % 4), :].contiguous()
@@ -56,7 +57,7 @@ class VGGExtractor(nn.Module):
 
     def forward(self, feature, feat_len):
         # Feature shape BSxTxD -> BS x CH(num of delta) x T x D(acoustic feature dim)
-        feature, feat_len = self.view_input(feature, feat_len)
+        feature, feat_len = self.view_input(feature, feat_len) #downsample on time
         # Foward
         feature = self.extractor(feature)
         # BSx128xT/4xD/4 -> BSxT/4x128xD/4
@@ -88,6 +89,54 @@ class CNNExtractor(nn.Module):
         feature = feature.transpose(1, 2)
 
         return feature, feat_len
+
+class MLPExtractor(nn.Module):
+    '''
+        A simple MLP extractor for acoustic feature down-sampling
+        Every 4 frame will be convert to corresponding features by MLP
+    '''
+
+    def __init__(self, input_dim, out_dim):
+        super(MLPExtractor, self).__init__()
+
+        self.out_dim = out_dim
+        self.hid_dim = input_dim * 2
+        self.extractor = nn.Sequential(
+            nn.Linear(input_dim, self.hid_dim),
+            nn.ReLU(),
+            nn.Linear(self.hid_dim, self.hid_dim),
+            nn.ReLU(),
+            nn.Linear(self.hid_dim, self.hid_dim),
+            nn.ReLU(),
+            nn.Linear(self.hid_dim, self.out_dim),
+        )
+
+    def reshape_input(self, feature, group_size):
+        down_sample_len = feature.size(1) // group_size
+        feature = feature[:,:down_sample_len*group_size,:]
+        reshape_feature = feature.reshape(feature.size(0) * down_sample_len, group_size*feature.size(2))
+        return reshape_feature
+
+
+    def forward(self, feature, feat_len):
+        bs = feature.size(0)
+        feature = self.reshape_input(feature, group_size=4)
+        raw_output = self.extractor(feature)
+
+        reshape_output = raw_output.reshape(bs, raw_output.size(0) // bs, self.out_dim)
+        return reshape_output, feat_len//4
+        # Fixed down-sample ratio
+        # feat_len = feat_len//4
+        # # Channel first
+        # feature = feature.transpose(1,2)
+        # # Foward
+        # feature = self.extractor(feature)
+        # # Channel last
+        # feature = feature.transpose(1, 2)
+
+        # return feature, feat_len
+
+
 
 
 class RNNLayer(nn.Module):

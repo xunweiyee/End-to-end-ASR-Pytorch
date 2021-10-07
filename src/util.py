@@ -123,7 +123,7 @@ def cal_er(tokenizer, pred, truth, mode='wer', ctc=False):
         if mode == 'wer':
             p = p.split(' ')
             t = t.split(' ')
-        er.append(float(ed.eval(p, t))/len(t))
+        er.append(float(ed.eval(p, t))/len(t)) # can be larger than 1 due to insertion error
     return sum(er)/len(er)
 
 

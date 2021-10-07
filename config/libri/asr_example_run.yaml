@@ -2,8 +2,7 @@ data:
   corpus:                                 
     name: 'Librispeech'                   # Specify corpus
     path: 'data/LibriSpeech'          # Path to raw LibriSpeech dataset
-#    train_split: ['train-clean-100','train-clean-360'] # Name of data splits to be used as training set
-    train_split: ['dev-clean'] # Name of data splits to be used as training set
+    train_split: ['train-clean-100','train-clean-360'] # Name of data splits to be used as training set
     dev_split: ['dev-clean']              # Name of data splits to be used as validation set
     bucketing: True                       # Enable/Disable bucketing
 #    bucketing: False                       # Enable/Disable bucketing
@@ -23,8 +22,8 @@ data:
     vocab_file: 'tests/sample_data/subword-16k.model'
 
 hparas:                                   # Experiment hyper-parameters
-#  valid_step: 5000
-  valid_step: 100
+  valid_step: 2000
+#  valid_step: 100
   max_step: 1000001
   tf_start: 1.0
   tf_end: 1.0
@@ -36,10 +35,9 @@ hparas:                                   # Experiment hyper-parameters
   curriculum: 0
 
 model:                                    # Model architecture
-  ctc_weight: 0.1                         # Weight for CTC loss
+  ctc_weight: 1                         # Weight for CTC loss
   encoder:
     prenet: 'mlp'                         # 'vgg'/'cnn'/'mlp'
-#     vgg: True                             # 4x reduction on time feature extraction
     module: 'LSTM'                        # 'LSTM'/'GRU'/'Transformer'
 #    module: 'Transformer'                        # 'LSTM'/'GRU'/'Transformer'
     bidirection: True
