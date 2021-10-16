@@ -374,8 +374,10 @@ Extractor: vgg  Train   Epoch 0 Step 76000      CTC Loss 3.53149        WER(att)
 
 
 Saved checkpoint (step = 125.0K, wer = 0.16) and status @ ckpt/asr_example_sd0/best_ctc.pth
+
 Saved checkpoint (step = 125.0K, wer = 0.16) and status @ ckpt/asr_example_sd0/best_ctc.pth
 Saved checkpoint (step = 145.0K, wer = 0.26) and status @ ckpt/asr_example_sd0/best_att.pth
+
 Saved checkpoint (step = 605.0K, wer = 0.13) and status @ ckpt/asr_example_sd0/best_ctc.pth
 Saved checkpoint (step = 565.0K, wer = 0.16) and status @ ckpt/asr_example_sd0/best_att.pth
 Extractor: mlp sEval- 16Epoch 1 Step 208000     CTC Loss 6.63263        WER(att) nan    (ctc) 0.98969   lr      ctc_weight 1

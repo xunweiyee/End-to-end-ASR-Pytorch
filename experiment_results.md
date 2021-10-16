@@ -1,19 +1,21 @@
-Investigating performance
+Investigating performance of Feature Extractor
 
-| Prenet | PreClassifier |CTC-WER|CTC-Loss|
-|---------|-------------|-------|-----|
-| MLP    | RNN|
-| config  | Path to the decoding config file.|
-| outdir  | Path to store decode result.|
-| njobs   | Number of threads used for decoding, very important in terms of efficiency. Large value equals fast decoding yet RAM/GPU RAM expensive.    |
-
-
+| Extractor | Classifier |CTC-WER|ATT-WER|CTC-Loss
+|---------|-------------|-------|-----|---|
+| MLP    | RNN|(step = 208.0K, wer = 0.99)| //|6.63263 
+| CNN  | RNN|(step = 605.0K, wer = 0.13)|(step = 565.0K, wer = 0.16)|//
+| ANN  | RNN| | |
+| RNN   | RNN |
 
 
-| Prenet | PreClassifier |CTC-WER|CTC-Loss|
-|---------|-------------|-------|-----|
-| MLP    | RNN|
-| config  | Path to the decoding config file.|
-| outdir  | Path to store decode result.|
-| njobs   | Number of threads used for decoding, very important in terms of efficiency. Large value equals fast decoding yet RAM/GPU RAM expensive.    |
+Investigating performance of Classifier
+
+| Extractor | Classifier |CTC-WER|ATT-WER|CTC-Loss
+|---------|-------------|-------|-----|---|
+| CNN    | MLP|(step = 488.0K, wer = 0.13)| //|3.30768| 
+| CNN  | CNN|
+| CNN  | ANN|
+
+//Traning time too long, to be calculated on our own data set
+
 
