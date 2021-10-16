@@ -133,12 +133,12 @@ class Solver(BaseSolver):
                             0, 1), txt, encode_len, txt_len)
                     total_loss += ctc_loss*self.model.ctc_weight
 
-                    running_ctc += ctc_loss.item()
+                    running_ctc += ctc_loss.detach().item()
                     running_ctc_count += 1
 
                     if running_ctc_count % 200 == 0:
                         pass
-                    total_ctc += ctc_loss.item()
+                    total_ctc += ctc_loss.detach().item()
 
                 if att_output is not None:
                     b, t, _ = att_output.shape
@@ -268,6 +268,7 @@ class Solver(BaseSolver):
         att_wer = stats_dict['att_wer']
         ctc_wer = stats_dict['ctc_wer']
         msg = 'Extractor: {model_name}\t' \
+              'Pre-Classifier: {pre_classifier}\t' \
               '{mode}\t' \
               'Epoch {epoch}\t' \
               'Step {step}\t' \
@@ -277,6 +278,7 @@ class Solver(BaseSolver):
               'lr {lr}\t' \
               'ctc_weight {ctc_weight}\t' \
             .format(model_name=self.config['model']['encoder']['prenet'],
+                    pre_classifier=self.config['model']['encoder']['module'],
                     mode=mode,
                     epoch=epoch,
                     step=self.step,

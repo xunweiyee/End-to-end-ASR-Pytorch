@@ -312,6 +312,39 @@ class Attention(nn.Module):
 
         return attn, context
 
+class MLPCLassfier(nn.Module):
+    def __init__(self, input_dim):
+        super(MLPCLassfier, self).__init__()
+        h1 = input_dim*2
+        h2 = h1*2
+        h3 = h2*2
+        h4 = h3*2
+        self.out_dim = h2*2
+        self.pre_classifier = nn.Sequential(
+            nn.Linear(input_dim, h1),
+            nn.ReLU(),
+            nn.Linear(h1, h2),
+            nn.ReLU(),
+            nn.Linear(h2, h2),
+            nn.ReLU(),
+            nn.Linear(h2, h2),
+            nn.ReLU(),
+            nn.Linear(h2, self.out_dim),
+        )
+
+    def reshape_input(self, feature, group_size):
+        down_sample_len = feature.size(1) // group_size
+        feature = feature[:,:down_sample_len*group_size,:]
+        reshape_feature = feature.reshape(feature.size(0) * down_sample_len, group_size*feature.size(2))
+        return reshape_feature
+
+
+    def forward(self, feature):
+
+
+        return self.pre_classifier(feature)
+
+
 
 class Encoder(nn.Module):
     ''' Encoder (a.k.a. Listener in LAS)
@@ -335,9 +368,11 @@ class Encoder(nn.Module):
         input_dim = input_size
 
         # Prenet on audio feature
+        self.extractor = None
         if self.vgg:
             vgg_extractor = VGGExtractor(input_size)
             module_list.append(vgg_extractor)
+            self.extractor = vgg_extractor
             input_dim = vgg_extractor.out_dim
             # self.sample_rate = self.sample_rate*4
         if self.cnn:
@@ -348,9 +383,11 @@ class Encoder(nn.Module):
         if self.mlp:
             mlp_extractor = MLPExtractor(input_size*4, out_dim=dim[0])
             module_list.append(mlp_extractor)
+            self.extractor = mlp_extractor
             input_dim = mlp_extractor.out_dim
             # self.sample_rate = self.sample_rate*4
         self.sample_rate *= 4
+
 
         # Recurrent encoder
         if module in ['LSTM', 'GRU']:
@@ -359,15 +396,28 @@ class Encoder(nn.Module):
                                             sample_rate[l], sample_style, proj[l]))
                 input_dim = module_list[-1].out_dim
                 self.sample_rate = self.sample_rate*sample_rate[l]
+        elif module == 'mlp':
+            self.pre_classifier = MLPCLassfier(input_dim)
+            self.out_dim = self.pre_classifier.out_dim
         else:
             raise NotImplementedError
 
         # Build model
         self.in_dim = input_size
-        self.out_dim = input_dim
+        # self.out_dim = input_dim
         self.layers = nn.ModuleList(module_list)
 
     def forward(self, input_x, enc_len):
-        for _, layer in enumerate(self.layers):
-            input_x, enc_len = layer(input_x, enc_len)
-        return input_x, enc_len
+        features, enc_len = self.extractor(input_x, enc_len)
+
+        dim = features.size()
+        feature_reshape = features.reshape(features.size(0)*features.size(1), features.size(2))
+
+        out = self.pre_classifier(feature_reshape)
+        output = out.reshape(dim[0], dim[1], self.out_dim)
+
+        return output, enc_len
+
+        # for _, layer in enumerate(self.layers):
+        #     input_x, enc_len = layer(input_x, enc_len)
+        # return input_x, enc_len

@@ -80,7 +80,7 @@ class CNNExtractor(nn.Module):
 
     def forward(self, feature, feat_len):
         # Fixed down-sample ratio
-        feat_len = feat_len//4
+        feat_len = torch.div(feat_len,4, rounding_mode="floor")
         # Channel first
         feature = feature.transpose(1,2) 
         # Foward
@@ -100,9 +100,11 @@ class MLPExtractor(nn.Module):
         super(MLPExtractor, self).__init__()
 
         self.out_dim = out_dim
-        self.hid_dim = input_dim * 2
+        self.hid_dim = input_dim * 3
         self.extractor = nn.Sequential(
             nn.Linear(input_dim, self.hid_dim),
+            nn.ReLU(),
+            nn.Linear(self.hid_dim, self.hid_dim),
             nn.ReLU(),
             nn.Linear(self.hid_dim, self.hid_dim),
             nn.ReLU(),
@@ -124,7 +126,7 @@ class MLPExtractor(nn.Module):
         raw_output = self.extractor(feature)
 
         reshape_output = raw_output.reshape(bs, raw_output.size(0) // bs, self.out_dim)
-        return reshape_output, feat_len//4
+        return reshape_output, torch.div(feat_len,4, rounding_mode="floor")
         # Fixed down-sample ratio
         # feat_len = feat_len//4
         # # Channel first

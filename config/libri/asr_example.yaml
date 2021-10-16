@@ -6,9 +6,7 @@ data:
     train_split: ['dev-clean'] # Name of data splits to be used as training set
     dev_split: ['dev-clean']              # Name of data splits to be used as validation set
     bucketing: True                       # Enable/Disable bucketing
-#    bucketing: False                       # Enable/Disable bucketing
-    batch_size: 16
-#    batch_size: 2
+    batch_size: 8
   audio:                                  # Attributes of audio feature
     feat_type: 'fbank'
     feat_dim:  40
@@ -36,11 +34,11 @@ hparas:                                   # Experiment hyper-parameters
   curriculum: 0
 
 model:                                    # Model architecture
-  ctc_weight: 0.1                         # Weight for CTC loss
+  ctc_weight: 1.0                         # Weight for CTC loss
   encoder:
-    prenet: 'mlp'                         # 'vgg'/'cnn'/'mlp'
+    prenet: 'vgg'                         # 'vgg'/'cnn'/'mlp'
 #     vgg: True                             # 4x reduction on time feature extraction
-    module: 'LSTM'                        # 'LSTM'/'GRU'/'Transformer'
+    module: 'mlp'                        # 'LSTM'/'GRU'/'Transformer'
 #    module: 'Transformer'                        # 'LSTM'/'GRU'/'Transformer'
     bidirection: True
     dim: [512,512,512,512,512]
