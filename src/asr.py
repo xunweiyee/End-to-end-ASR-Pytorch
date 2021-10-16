@@ -317,8 +317,6 @@ class MLPCLassfier(nn.Module):
         super(MLPCLassfier, self).__init__()
         h1 = input_dim*2
         h2 = h1*2
-        h3 = h2*2
-        h4 = h3*2
         self.out_dim = h2*2
         self.pre_classifier = nn.Sequential(
             nn.Linear(input_dim, h1),
@@ -417,7 +415,3 @@ class Encoder(nn.Module):
         output = out.reshape(dim[0], dim[1], self.out_dim)
 
         return output, enc_len
-
-        # for _, layer in enumerate(self.layers):
-        #     input_x, enc_len = layer(input_x, enc_len)
-        # return input_x, enc_len

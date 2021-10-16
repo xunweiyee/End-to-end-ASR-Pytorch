@@ -127,16 +127,6 @@ class MLPExtractor(nn.Module):
 
         reshape_output = raw_output.reshape(bs, raw_output.size(0) // bs, self.out_dim)
         return reshape_output, torch.div(feat_len,4, rounding_mode="floor")
-        # Fixed down-sample ratio
-        # feat_len = feat_len//4
-        # # Channel first
-        # feature = feature.transpose(1,2)
-        # # Foward
-        # feature = self.extractor(feature)
-        # # Channel last
-        # feature = feature.transpose(1, 2)
-
-        # return feature, feat_len
 
 
 

@@ -189,7 +189,7 @@ class Solver(BaseSolver):
 
                     self.print_msg("Eval", n_epochs)
                     self.print_msg("Train", n_epochs)
-                    print("total_loss", total_loss)
+                    print("total_loss", total_loss.item())
 
                 # End of step
                 # https://github.com/pytorch/pytorch/issues/13246#issuecomment-529185354
@@ -245,11 +245,11 @@ class Solver(BaseSolver):
                                                                                      ignore_repeat=True))
 
         # Ckpt if performance improves
-        validationb_ctc_loss = total_ctc_loss.item()/len(self.dv_set)
-        self.eval_stats['ctc_loss'] = validationb_ctc_loss
+        validation_ctc_loss = total_ctc_loss.item()/len(self.dv_set)
+        self.eval_stats['ctc_loss'] = validation_ctc_loss
         for task in ['att', 'ctc']:
             dev_wer[task] = sum(dev_wer[task])/len(dev_wer[task])
-            self.eval_stats[(task + '_wer')] = dev_wer[task]
+            self.eval_stats[(task + '_wer')] = dev_wer[task] # Updating eval_stats dictionary
             if dev_wer[task] < self.best_wer[task]:
                 self.best_wer[task] = dev_wer[task]
                 self.save_checkpoint('best_{}.pth'.format(task), 'wer', dev_wer[task])
@@ -263,6 +263,10 @@ class Solver(BaseSolver):
         # return validationb_ctc_loss
 
     def print_msg(self, mode, epoch):
+        '''
+        Save the stats in a dictionary and print during evaluation
+        mode: train / eval
+        '''
         stats_dict = self.eval_stats if mode =='Eval' else self.train_stats
         ctc_loss = stats_dict['ctc_loss']
         att_wer = stats_dict['att_wer']
@@ -275,8 +279,8 @@ class Solver(BaseSolver):
               'CTC Loss {ctc_loss:.5f}\t' \
               'WER(att) {att_wer:.5f}\t' \
               '(ctc) {ctc_wer:.5f}\t' \
-              'lr {lr}\t' \
               'ctc_weight {ctc_weight}\t' \
+              'lr {lr}\t' \
             .format(model_name=self.config['model']['encoder']['prenet'],
                     pre_classifier=self.config['model']['encoder']['module'],
                     mode=mode,
