@@ -1,5 +1,5 @@
 data/
-.code-workspace
+*.code-workspace
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
