@@ -11,6 +11,11 @@ REMOVE_TOP_N_TXT = 5000000
 # Default num. of threads used for loading LibriSpeech
 READ_FILE_THREADS = 1
 
+import logging
+logger = logging.getLogger()
+logging.basicConfig(level="INFO", format="%(levelname)s: %(filename)s: %(message)s")
+logger.disabled = False
+
 
 def read_text(file):
     '''Get transcription of target wave file, 
@@ -27,6 +32,8 @@ def read_text(file):
 
 class LibriDataset(Dataset):
     def __init__(self, path, split, tokenizer, bucket_size, ascending=False):
+        logger.info(f'LibriDataset init: {path}, {split}, {tokenizer}, bucket_size {bucket_size}')
+
         # Setup
         self.path = path
         self.bucket_size = bucket_size
@@ -63,6 +70,8 @@ class LibriDataset(Dataset):
 
 class LibriTextDataset(Dataset):
     def __init__(self, path, split, tokenizer, bucket_size):
+        logger.info(f'LibriTextDataset init: {path}, {split}, {tokenizer}, bucket_size {bucket_size}')
+
         # Setup
         self.path = path
         self.bucket_size = bucket_size
@@ -73,6 +82,7 @@ class LibriTextDataset(Dataset):
         file_list, all_sent = [], []
 
         for s in split:
+            print("s in split", s, split)
             if s in OFFICIAL_TXT_SRC:
                 self.encode_on_fly = True
                 with open(join(path, s), 'r') as f:
