@@ -107,7 +107,7 @@ def save_txt(txt, output_path):
     if not os.path.exists(os.path.dirname(output_path)):
         os.makedirs(os.path.dirname(output_path))
 
-    with open(output_path, 'a') as f:
+    with open(output_path, 'a+') as f:
         for line in txt:
             f.write(f"{line}\n")
         f.close()
@@ -133,7 +133,9 @@ def convert(src_path=src_path):
         file_name = str(idx) #save the transcript as num, can be changed to folder name
         output_path = join(path, split, file_name)
         txt_output_path = join(output_path, file_name + '.trans.txt')
-        
+        txt_src_path = 'tedsrt-lm-norm.txt'
+        txt_src_path = join(path, split, txt_src_path)
+                
         logging.info(f"{idx}. Creating transcript for {curr_folder}...")
         txt_path = list(Path(join(src_path, curr_folder)).rglob('*.txt'))[0]
         transcript, time_slices, txt_src = txt_to_trans(txt_path, file_name)
