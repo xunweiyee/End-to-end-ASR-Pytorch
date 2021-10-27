@@ -24,16 +24,18 @@ random.seed(42)
 AUDIO_EXTENSION = 'mp3'
 READ_FILE_THREADS = 4
 corpus_path = '../data/TedSrt'
+txt_norm = 'tedsrt-norm.txt'
+txt_vocab = 'tedsrt-vocab.txt'
 processed_data_path = join(corpus_path, 'processed_data') # store all data in this folder before splitting
+txt_norm_path = join(corpus_path, txt_norm)
+txt_vocab_path = join(corpus_path, txt_vocab)
 
-src_path = 'data'
+src_path = 'data/' # raw data source
+ratio=[.6, .2, .2] # train test split
 
 # filter audio and srt
-DURATION_DIFF = 7 # seconds
-REPEATED_OCCURRENCE = 50
-
-# train test split
-ratio=[.6, .2, .2]
+duration_diff = 7 # seconds
+repeated_occurrence = 50
 
 
 
@@ -125,7 +127,7 @@ def check_ms_accuracy(time_slices, occurrence_threshold=20):
     '''
     for time_slice in time_slices:
         occurrence_820 = sum(1 for elem in time_slices if elem[1][0] % 1000 == 820)
-    if occurrence_820 > REPEATED_OCCURRENCE:
+    if occurrence_820 > repeated_occurrence:
         return occurrence_820
     return 0
 
@@ -134,7 +136,7 @@ def check_intro_timing(audio_duration, audio_srt_duration):
     Check whether srt matches audio, remove those without taking water drop intro into account
     '''
     duration_diff = audio_duration - audio_srt_duration
-    if duration_diff > DURATION_DIFF:
+    if duration_diff > duration_diff:
         return duration_diff
     return 0
 
@@ -146,14 +148,12 @@ def build_dataset(src_path=src_path):
     '''
     # logger.disabled = True
     shutil.rmtree(corpus_path, ignore_errors=True)
-    folders = os.listdir(src_path)
+    folders = os.listdir(src_path)[:10]
     for idx, curr_folder in enumerate(tqdm(folders, desc="Building dataset from scraped data")):
         # logging.info('\n')
         file_name = str(idx) #save the transcript as num, can be changed to folder name
         output_path = join(processed_data_path, file_name)
         txt_output_path = join(output_path, file_name + '.trans.txt')
-        txt_src_path = 'tedsrt-lm-norm.txt'
-        txt_src_path = join(corpus_path, txt_src_path)
                 
         # logging.info(f"{idx}. Creating transcript for {curr_folder}...")
         txt_path = list(Path(join(src_path, curr_folder)).rglob('*.txt'))[0]
@@ -181,7 +181,7 @@ def build_dataset(src_path=src_path):
         
         # writing output
         save_txt(transcript, txt_output_path)
-        save_txt(txt_src, txt_src_path)
+        save_txt(txt_src, txt_norm_path)
         for idx, time_slice in time_slices:
             audio_slice = audio_file[time_slice[0]:time_slice[1]]
             audio_output_path = join(output_path, f"{file_name}-{idx}.{AUDIO_EXTENSION}")
@@ -215,9 +215,10 @@ def split_dataset(ratio=[.6, .2, .2]):
     shutil.rmtree(processed_data_path, ignore_errors=True)
 
 
+
 def main():
     print('Scraping data...')
-    # scraper.main(number_of_talks=200, starting_video_id=100)
+    scraper.main(number_of_talks=200, starting_video_id=100)
     print()
     print('Start preprocessing...')
     build_dataset(src_path)
