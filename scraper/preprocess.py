@@ -22,6 +22,7 @@ logger = logging.getLogger()
 
 random.seed(42)
 AUDIO_EXTENSION = 'mp3'
+os.chdir(os.path.dirname(__file__))
 corpus_path = '../data/TedSrt'
 txt_norm = 'tedsrt-norm.txt'
 txt_vocab = 'tedsrt-vocab.txt'
@@ -147,7 +148,7 @@ def build_dataset(src_path=src_path):
     '''
     # logger.disabled = True
     shutil.rmtree(corpus_path, ignore_errors=True)
-    folders = os.listdir(src_path)[:10]
+    folders = os.listdir(src_path)
     for idx, curr_folder in enumerate(tqdm(folders, desc="Building dataset from scraped data")):
         # logging.info('\n')
         file_name = str(idx) #save the transcript as num, can be changed to folder name
