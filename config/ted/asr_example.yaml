@@ -3,8 +3,8 @@ data:
     name: 'Tedsrt'                   # Specify corpus
     path: 'data/TedSrt'          # Path to raw LibriSpeech dataset
 #    train_split: ['train-clean-100','train-clean-360'] # Name of data splits to be used as training set
-    train_split: ['Train'] # Name of data splits to be used as training set
-    dev_split: ['Train']              # Name of data splits to be used as validation set
+    train_split: ['train'] # Name of data splits to be used as training set
+    dev_split: ['dev']              # Name of data splits to be used as validation set
     bucketing: True                       # Enable/Disable bucketing
     batch_size: 8
   audio:                                  # Attributes of audio feature
