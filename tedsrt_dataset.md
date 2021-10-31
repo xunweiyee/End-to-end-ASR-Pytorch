@@ -6,6 +6,9 @@ To train using TedSrt `python main.py --config config/ted/asr_example.yaml --njo
 
 ![Run preprocess.py](assets/ss-preprocessing-data.png)
 
-141 urls scraped /200
+- 141 /200 urls scraped
+- 23 /140 scraped data converted to dataset
 
-using 23 scraped data /140
+Try training 1000 steps. Configuration used stored at config/ted/asr_xw.yaml
+
+![Try training with TedSrt.py](assets/try-training.png)
