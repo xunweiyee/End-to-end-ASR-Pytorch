@@ -1,12 +1,12 @@
-import math
 import torch
-import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions.categorical import Categorical
 
+from src.classifier import MLPCLassfier
 from src.util import init_weights, init_gate
-from src.module import VGGExtractor, CNNExtractor, RNNLayer, ScaleDotAttention, LocationAwareAttention, MLPExtractor
+from src.module import CNNExtractor, RNNLayer, ScaleDotAttention, LocationAwareAttention
+from src.extractor import VGGExtractor, MLPExtractor
 
 
 class ASR(nn.Module):
@@ -312,37 +312,6 @@ class Attention(nn.Module):
 
         return attn, context
 
-class MLPCLassfier(nn.Module):
-    def __init__(self, input_dim):
-        super(MLPCLassfier, self).__init__()
-        h1 = input_dim*2
-        h2 = h1*2
-        self.out_dim = h2*2
-        self.pre_classifier = nn.Sequential(
-            nn.Linear(input_dim, h1),
-            nn.ReLU(),
-            nn.Linear(h1, h2),
-            nn.ReLU(),
-            nn.Linear(h2, h2),
-            nn.ReLU(),
-            nn.Linear(h2, h2),
-            nn.ReLU(),
-            nn.Linear(h2, self.out_dim),
-        )
-
-    def reshape_input(self, feature, group_size):
-        down_sample_len = feature.size(1) // group_size
-        feature = feature[:,:down_sample_len*group_size,:]
-        reshape_feature = feature.reshape(feature.size(0) * down_sample_len, group_size*feature.size(2))
-        return reshape_feature
-
-
-    def forward(self, feature):
-
-
-        return self.pre_classifier(feature)
-
-
 
 class Encoder(nn.Module):
     ''' Encoder (a.k.a. Listener in LAS)
@@ -389,14 +358,15 @@ class Encoder(nn.Module):
 
         # Recurrent encoder
         if module in ['LSTM', 'GRU']:
+            # RNN Classifier
             for l in range(num_layers):
                 module_list.append(RNNLayer(input_dim, module, dim[l], bidirection, dropout[l], layer_norm[l],
                                             sample_rate[l], sample_style, proj[l]))
                 input_dim = module_list[-1].out_dim
                 self.sample_rate = self.sample_rate*sample_rate[l]
         elif module == 'mlp':
-            self.pre_classifier = MLPCLassfier(input_dim)
-            self.out_dim = self.pre_classifier.out_dim
+            self.classifier = MLPCLassfier(input_dim)
+            self.out_dim = self.classifier.out_dim
         else:
             raise NotImplementedError
 
@@ -411,7 +381,7 @@ class Encoder(nn.Module):
         dim = features.size()
         feature_reshape = features.reshape(features.size(0)*features.size(1), features.size(2))
 
-        out = self.pre_classifier(feature_reshape)
+        out = self.classifier(feature_reshape)
         output = out.reshape(dim[0], dim[1], self.out_dim)
 
         return output, enc_len
