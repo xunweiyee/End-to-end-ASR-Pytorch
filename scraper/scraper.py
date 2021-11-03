@@ -15,6 +15,9 @@ import logging
 import os
 import re
 import shutil
+import transcript
+
+os.chdir(os.path.dirname(__file__))
 
 # Logger setup
 logger = logging.getLogger()
@@ -216,6 +219,14 @@ def download_and_save_srt_transcript_text(srt_transcript_url, path_to_save_to):
     srt_transcript_file_saved_location = os.path.join(path_to_save_to, SRT_TRANSCRIPT_FILE_EXTENSION)
     try:
         _, _ = request.urlretrieve(srt_transcript_url, filename=srt_transcript_file_saved_location)
+        
+        # Check for srt accuracy before downloading audio
+        srt_is_accurate = transcript.check_srt_accuracy(srt_transcript_file_saved_location)
+        if not srt_is_accurate:
+            logger.warning("SRT transcript not accurate. Deleting this specific data folder...")
+            shutil.rmtree(path_to_save_to)
+            return False
+
         logger.info("SRT transcript saved.")
         return True
     except error.HTTPError:
