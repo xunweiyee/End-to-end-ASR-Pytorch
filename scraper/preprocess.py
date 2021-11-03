@@ -121,7 +121,7 @@ def save_txt(txt, output_path):
             f.write(f"{line}\n")
         f.close()
 
-def check_ms_accuracy(time_slices, occurrence_threshold=20):
+def check_ms_accuracy(time_slices):
     '''
     Check whether srt is accurate, remove those not accurate to milliseconds, check repeated occurrence of 820
     '''
@@ -218,7 +218,7 @@ def split_dataset(ratio=[.6, .2, .2]):
 
 def main():
     print('Scraping data...')
-    scraper.main(number_of_talks=200, starting_video_id=100)
+    scraper.main(number_of_talks=1000, starting_video_id=100)
     print()
     print('Start preprocessing...')
     build_dataset(src_path)
