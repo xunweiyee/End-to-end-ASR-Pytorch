@@ -324,6 +324,7 @@ class Encoder(nn.Module):
         self.vgg = prenet == 'vgg'
         self.cnn = prenet == 'cnn'
         self.mlp = prenet == 'mlp'
+        self.module = module
         self.sample_rate = 1
         assert len(sample_rate) == len(dropout), 'Number of layer mismatch'
         assert len(dropout) == len(dim), 'Number of layer mismatch'
@@ -364,6 +365,7 @@ class Encoder(nn.Module):
                                             sample_rate[l], sample_style, proj[l]))
                 input_dim = module_list[-1].out_dim
                 self.sample_rate = self.sample_rate*sample_rate[l]
+                self.out_dim = input_dim
         elif module == 'mlp':
             self.classifier = MLPCLassfier(input_dim)
             self.out_dim = self.classifier.out_dim
@@ -372,10 +374,16 @@ class Encoder(nn.Module):
 
         # Build model
         self.in_dim = input_size
-        # self.out_dim = input_dim
         self.layers = nn.ModuleList(module_list)
 
     def forward(self, input_x, enc_len):
+
+        if self.module in ['LSTM', 'GRU']:
+            for _, layer in enumerate(self.layers):
+                input_x, enc_len = layer(input_x, enc_len)
+            return input_x, enc_len
+
+
         features, enc_len = self.extractor(input_x, enc_len)
 
         dim = features.size()
@@ -385,3 +393,5 @@ class Encoder(nn.Module):
         output = out.reshape(dim[0], dim[1], self.out_dim)
 
         return output, enc_len
+
+
