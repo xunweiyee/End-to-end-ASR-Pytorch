@@ -140,7 +140,7 @@ def check_intro_timing(audio_duration, audio_srt_duration):
         return duration_diff
     return 0
 
-def build_dataset(src_path=src_path):
+def build_dataset(src_path=src_path, sample=100):
     '''
     Build dataset from raw data scraper/data/
     split audio into slices
@@ -148,7 +148,7 @@ def build_dataset(src_path=src_path):
     '''
     # logger.disabled = True
     shutil.rmtree(corpus_path, ignore_errors=True)
-    folders = os.listdir(src_path)
+    folders = os.listdir(src_path)[:100]
     for idx, curr_folder in enumerate(tqdm(folders, desc="Building dataset from scraped data")):
         # logging.info('\n')
         file_name = str(idx) #save the transcript as num, can be changed to folder name
@@ -156,11 +156,16 @@ def build_dataset(src_path=src_path):
         txt_output_path = join(output_path, file_name + '.trans.txt')
                 
         # logging.info(f"{idx}. Creating transcript for {curr_folder}...")
-        txt_path = list(Path(join(src_path, curr_folder)).rglob('*.txt'))[0]
+        try:
+            txt_path = list(Path(join(src_path, curr_folder)).rglob('*.txt'))[0]
+            audio_path = list(Path(join(src_path, curr_folder)).rglob('*.' + AUDIO_EXTENSION))[0]
+        except:
+            tqdm.write(f'Data not complete {idx} {curr_folder}')
+            continue
         transcript, time_slices, txt_src = txt_to_trans(txt_path, file_name)
         
         # logging.info(f"{idx}. Slicing audio for {curr_folder}...")
-        audio_path = list(Path(join(src_path, curr_folder)).rglob('*.' + AUDIO_EXTENSION))[0]
+        
         audio_file = AudioSegment.from_file(audio_path, AUDIO_EXTENSION)
         
         # check timing accuracy by milliseconds
@@ -218,10 +223,10 @@ def split_dataset(ratio=[.6, .2, .2]):
 
 def main():
     print('Scraping data...')
-    scraper.main(number_of_talks=1000, starting_video_id=100)
+    scraper.main(number_of_talks=500, starting_video_id=2000) # 1000-1500
     print()
     print('Start preprocessing...')
-    build_dataset(src_path)
+    build_dataset(src_path, sample=100)
     split_dataset(ratio=ratio)
 
 
