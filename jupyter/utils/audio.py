@@ -83,11 +83,11 @@ def inspect_file(path):
     print(f" - File size: {os.path.getsize(path)} bytes")
     print(f" - {torchaudio.info(path)}")
 
-def plot_spectrogram(spec, title=None, ylabel='freq_bin', aspect='auto', xmax=None):
+def plot_spectrogram(spec, title=None, xlabel='frame', ylabel='freq_bin', aspect='auto', xmax=None):
     fig, axs = plt.subplots(1, 1, figsize=(12, 3))
     axs.set_title(title or 'Spectrogram (db)')
     axs.set_ylabel(ylabel)
-    axs.set_xlabel('frame')
+    axs.set_xlabel(xlabel)
     im = axs.imshow(librosa.power_to_db(spec), origin='lower', aspect=aspect)
     if xmax:
         axs.set_xlim((0, xmax))
