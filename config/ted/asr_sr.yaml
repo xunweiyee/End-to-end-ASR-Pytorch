@@ -36,7 +36,7 @@ hparas:                                   # Experiment hyper-parameters
 model:                                    # Model architecture
   ctc_weight: 1.0                         # Weight for CTC loss
   encoder:
-    prenet: 'vgg'                         # 'vgg'/'cnn'/'mlp'
+    prenet: 'mlp'                         # 'vgg'/'cnn'/'mlp'
     module: 'LSTM'                        # 'LSTM'/'GRU'/'Transformer'/'mlp'
     bidirection: True
     dim: [512,512,512,512,512]
@@ -58,3 +58,20 @@ model:                                    # Model architecture
     dim: 512
     layer: 1
     dropout: 0
+
+    """
+Extractor: vgg sPre-Classifier: mlp     Eval    Epoch 87        Step 270000     CTC Loss 2.61847        WER(att) nan    (ctc) 0.26990   ctc_weight 1.0
+        lr
+Extractor: vgg  Pre-Classifier: mlp     Train   Epoch 87        Step 270000     CTC Loss 0.00000        WER(att) nan    (ctc) 0.00000   ctc_weight 1.0
+
+Extractor: vgg sPre-Classifier: LSTM    Eval    Epoch 175       Step 542000     CTC Loss 1.08693        WER(att) nan    (ctc) 0.26054   ctc_weight 1.0        lr
+Extractor: vgg  Pre-Classifier: LSTM    Train   Epoch 175       Step 542000     CTC Loss 0.00942        WER(att) nan    (ctc) 0.00000   ctc_weight 1.0        lr
+
+
+
+total_loss 0.0011368163395673037
+Extractor: mlp sPre-Classifier: LSTM    Eval    Epoch 56        Step 174000     CTC Loss 0.46318        WER(att) nan    (ctc) 0.27276   ctc_weight 1.0        lr
+Extractor: mlp  Pre-Classifier: LSTM    Train   Epoch 56        Step 174000     CTC Loss 0.04382        WER(att) nan    (ctc) 0.05357   ctc_weight 1.0        lr
+
+
+    """
