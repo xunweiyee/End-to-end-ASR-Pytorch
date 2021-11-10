@@ -6,15 +6,21 @@ from torch.distributions.categorical import Categorical
 from src.classifier import MLPCLassfier
 from src.util import init_weights, init_gate
 from src.module import CNNExtractor, RNNLayer, ScaleDotAttention, LocationAwareAttention
-from src.extractor import VGGExtractor, MLPExtractor
+from src.extractor import VGGExtractor, MLPExtractor, RNNExtractor, ANNExtractor
 
+import logging
+logger = logging.getLogger()
+logging.basicConfig(level="INFO", format="%(levelname)s: %(filename)s: %(message)s")
+# logger.disabled = True
 
 class ASR(nn.Module):
     ''' ASR model, including Encoder/Decoder(s)'''
 
+    # ASR(self.feat_dim, self.vocab_size, init_adadelta, **self.config['model']).to(self.device)
     def __init__(self, input_size, vocab_size, init_adadelta, ctc_weight, encoder, attention, decoder, emb_drop=0.0):
         super(ASR, self).__init__()
 
+        logging.info(f"ASR: encoder {encoder}")
         # Setup
         assert 0 <= ctc_weight <= 1
         self.vocab_size = vocab_size
@@ -61,6 +67,15 @@ class ASR(nn.Module):
         if self.encoder.cnn:
             msg.append(
                 '           | CNN Extractor w/ time downsampling rate = 4 in encoder enabled.')
+        if self.encoder.mlp:
+            msg.append(
+                '           | MLP Extractor enabled.')
+        if self.encoder.rnn:
+            msg.append(
+                '           | RNN Extractor enabled.')
+        if self.encoder.ann:
+            msg.append(
+                '           | ANN Extractor enabled.')
         if self.enable_ctc:
             msg.append('           | CTC training on encoder enabled ( lambda = {}).'.format(
                 self.ctc_weight))
@@ -324,6 +339,8 @@ class Encoder(nn.Module):
         self.vgg = prenet == 'vgg'
         self.cnn = prenet == 'cnn'
         self.mlp = prenet == 'mlp'
+        self.rnn = prenet == 'rnn'
+        self.ann = prenet == 'ann'
         self.module = module
         self.sample_rate = 1
         assert len(sample_rate) == len(dropout), 'Number of layer mismatch'
@@ -336,6 +353,7 @@ class Encoder(nn.Module):
         input_dim = input_size
 
         # Prenet on audio feature
+        logging.info(f"Encoder: prenet {input_size}, out_dim {dim[0]}")
         self.extractor = None
         if self.vgg:
             vgg_extractor = VGGExtractor(input_size)
@@ -353,9 +371,16 @@ class Encoder(nn.Module):
             module_list.append(mlp_extractor)
             self.extractor = mlp_extractor
             input_dim = mlp_extractor.out_dim
-            # self.sample_rate = self.sample_rate*4
+        if self.rnn:
+            rnn_extractor = RNNExtractor(input_size, out_dim=dim[0])
+            module_list.append(rnn_extractor)
+            input_dim = rnn_extractor.out_dim
+        if self.ann:
+            ann_extractor = ANNExtractor(input_size, out_dim=dim[0])
+            module_list.append(ann_extractor)
+            input_dim = ann_extractor.out_dim
         self.sample_rate *= 4
-
+        logging.info(f"Encoder: prenet out_dim {dim[0]}")
 
         # Recurrent encoder
         if module in ['LSTM', 'GRU']:
@@ -393,5 +418,3 @@ class Encoder(nn.Module):
         output = out.reshape(dim[0], dim[1], self.out_dim)
 
         return output, enc_len
-
-
