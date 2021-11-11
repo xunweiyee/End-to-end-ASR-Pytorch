@@ -9,7 +9,7 @@ text_paths = list(Path('../data/TedSrt').rglob("*.trans.txt"))
 
 for text_path in text_paths:
     file = open(text_path, "r")
-    to_remove_list = ['laughter', 'applause']
+    to_remove_list = ['laughter', 'applause', 'music']
 
     for line in file:
         is_in = [ele for ele in to_remove_list if(ele in line)]
