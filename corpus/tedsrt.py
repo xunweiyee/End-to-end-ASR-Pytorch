@@ -1,6 +1,7 @@
 from tqdm import tqdm
 from pathlib import Path
 from os.path import join, getsize
+from ntpath import basename
 from joblib import Parallel, delayed
 from torch.utils.data import Dataset
 
@@ -19,7 +20,7 @@ def read_text(file):
        it's somewhat redundant for accessing each txt multiplt times,
        but it works fine with multi-thread'''
     src_file = '-'.join(file.split('-')[:-1])+'.trans.txt'
-    idx = file.split('/')[-1].split('.')[0]
+    idx = basename(file).split('.')[0]
 
     with open(src_file, 'r') as fp:
         for line in fp:
