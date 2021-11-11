@@ -22,8 +22,8 @@ data:
 
 hparas:                                   # Experiment hyper-parameters
 #  valid_step: 5000
-  valid_step: 100
-  max_step: 1000
+  valid_step: 2000
+  max_step: 1000001
   tf_start: 1.0
   tf_end: 1.0
   tf_step: 500000
