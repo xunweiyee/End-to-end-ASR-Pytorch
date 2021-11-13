@@ -156,43 +156,73 @@ class RNNExtractor(nn.Module):
 
 
 
-class ANNExtractor(nn.Module):
-    '''
-        A simple MLP extractor for acoustic feature down-sampling
-        Every 4 frame will be convert to corresponding features by MLP
-    '''
+# attention layer code inspired from: https://discuss.pytorch.org/t/self-attention-on-words-and-masking/5671/4
+import numpy as np
+import torch.nn.functional as F
 
-    def __init__(self, input_dim, out_dim):
+# attention layer code inspired from: https://discuss.pytorch.org/t/self-attention-on-words-and-masking/5671/4
+class ANNExtractor(nn.Module):
+    def __init__(self, hidden_size, batch_first=True):
         super(ANNExtractor, self).__init__()
 
-        self.out_dim = out_dim
-        self.hide_dim = input_dim * 3
-        self.extractor = nn.Sequential(
-            nn.Linear(input_dim, self.hide_dim),
-            nn.ReLU(),
-            nn.Linear(self.hide_dim, self.hide_dim),
-            nn.ReLU(),
-            nn.Linear(self.hide_dim, self.hide_dim),
-            nn.ReLU(),
-            nn.Linear(self.hide_dim, self.hide_dim),
-            nn.ReLU(),
-            nn.Linear(self.hide_dim, self.out_dim),
-        )
+        self.out_dim = hidden_size
+        self.hidden_size = hidden_size
+        self.batch_first = batch_first
 
-    def reshape_input(self, feature, group_size):
-        down_sample_len = feature.size(1) // group_size
-        feature = feature[:,:down_sample_len*group_size,:]
-        reshape_feature = feature.reshape(feature.size(0) * down_sample_len, group_size*feature.size(2))
-        return reshape_feature
+        self.att_weights = nn.Parameter(torch.Tensor(1, hidden_size), requires_grad=True)
 
+        stdv = 1.0 / np.sqrt(self.hidden_size)
+        for weight in self.att_weights:
+            nn.init.uniform_(weight, -stdv, stdv)
+        
+        hidden_dim = hidden_size
+        self.fc1 = nn.Sequential(nn.Linear(hidden_dim, hidden_dim),
+                                 nn.ReLU()) 
+        self.fc2 = nn.Linear(hidden_dim, 1)
 
-    def forward(self, feature, feat_len):
-        bs = feature.size(0)
-        feature = self.reshape_input(feature, group_size=4)
-        raw_output = self.extractor(feature)
+    def get_mask(self):
+        pass
 
-        reshape_output = raw_output.reshape(bs, raw_output.size(0) // bs, self.out_dim)
-        return reshape_output, torch.div(feat_len,4, rounding_mode="floor")
+    def forward(self, inputs, lengths):
+        if self.batch_first:
+            batch_size, max_len = inputs.size()[:2]
+        else:
+            max_len, batch_size = inputs.size()[:2]
+            
+        # apply attention layer
+        weights = torch.bmm(inputs,
+                            self.att_weights  # (1, hidden_size)
+                            .permute(1, 0)  # (hidden_size, 1)
+                            .unsqueeze(0)  # (1, hidden_size, 1)
+                            .repeat(batch_size, 1, 1) # (batch_size, hidden_size, 1)
+                            )
+    
+        attentions = torch.softmax(F.relu(weights.squeeze()), dim=-1)
+
+        # create mask based on the sentence lengths
+        mask = torch.ones(attentions.size(), requires_grad=True).cuda()
+        for i, l in enumerate(lengths):  # skip the first sentence
+            if l < max_len:
+                mask[i, l:] = 0
+        
+
+        # apply mask and renormalize attention scores (weights)
+        masked = attentions * mask
+        _sums = masked.sum(-1).unsqueeze(-1)  # sums per row
+        
+        attentions = masked.div(_sums)
+
+        # apply attention weights
+        weighted = torch.mul(inputs, attentions.unsqueeze(-1).expand_as(inputs))
+
+        # get the final fixed vector representations of the sentences
+        representations = weighted.sum(1).squeeze().contiguous()
+        # print(attentions.shape, representations.shape)
+        z = self.fc1(representations)
+        # z = self.fc2(z)
+
+        # return z.unsqueeze(1), torch.ones(lengths.shape[0], dtype=int) # representations, attentions
+        return representations, attentions
 
 
 class CNNExtractor(nn.Module):

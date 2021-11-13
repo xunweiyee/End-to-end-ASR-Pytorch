@@ -2,6 +2,7 @@ data/
 *.code-workspace
 *.zip
 result/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

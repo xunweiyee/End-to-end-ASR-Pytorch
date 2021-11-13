@@ -376,7 +376,7 @@ class Encoder(nn.Module):
             module_list.append(rnn_extractor)
             input_dim = rnn_extractor.out_dim
         if self.ann:
-            ann_extractor = ANNExtractor(input_size, out_dim=dim[0])
+            ann_extractor = ANNExtractor(input_size)
             module_list.append(ann_extractor)
             input_dim = ann_extractor.out_dim
         self.sample_rate *= 4

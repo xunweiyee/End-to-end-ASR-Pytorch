@@ -1,10 +1,9 @@
 data:
   corpus:                                 
-    name: 'tedsrt'                   # Specify corpus
-    path: 'data/TedSrt'          # Path to raw LibriSpeech dataset
-#    train_split: ['train-clean-100','train-clean-360'] # Name of data splits to be used as training set
-    train_split: ['train'] # Name of data splits to be used as training set
-    dev_split: ['dev']              # Name of data splits to be used as validation set
+    name: 'tedsrt'                        # Specify corpus
+    path: 'data/TedSrt'                   # Path to raw LibriSpeech dataset
+    train_split: ['train']                # Name of data splits to be used as training set
+    dev_split: ['dev']                    # Name of data splits to be used as validation set
     bucketing: True                       # Enable/Disable bucketing
     batch_size: 8
   audio:                                  # Attributes of audio feature
@@ -36,7 +35,7 @@ hparas:                                   # Experiment hyper-parameters
 model:                                    # Model architecture
   ctc_weight: 1.0                         # Weight for CTC loss
   encoder:
-    prenet: 'rnn'                         # 'vgg'/'cnn'/'mlp'/'rnn'/'ann'
+    prenet: 'ann'                         # 'vgg'/'cnn'/'mlp'/'rnn'/'ann'
     module: 'LSTM'                        # 'LSTM'/'GRU'/'Transformer'/'mlp'
     bidirection: True
     dim: [512,512,512,512,512]
