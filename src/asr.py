@@ -5,8 +5,8 @@ from torch.distributions.categorical import Categorical
 
 from src.classifier import MLPCLassfier, CNNClassifier
 from src.util import init_weights, init_gate
-from src.module import CNNExtractor, RNNLayer, ScaleDotAttention, LocationAwareAttention
-from src.extractor import VGGExtractor, MLPExtractor, RNNExtractor, ANNExtractor
+from src.module import RNNLayer, ScaleDotAttention, LocationAwareAttention
+from src.extractor import VGGExtractor, MLPExtractor, RNNExtractor, ANNExtractor, CNNExtractor
 
 import logging
 logger = logging.getLogger()
