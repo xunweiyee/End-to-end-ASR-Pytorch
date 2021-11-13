@@ -3,31 +3,6 @@ import numpy as np
 import torch.nn as nn
 
 
-class CNNExtractor(nn.Module):
-    ''' A simple 2-layer CNN extractor for acoustic feature down-sampling'''
-
-    def __init__(self, input_dim, out_dim):
-        super(CNNExtractor, self).__init__()
-
-        self.out_dim = out_dim
-        self.extractor = nn.Sequential(
-            nn.Conv1d(input_dim, out_dim, 4, stride=2, padding=1),
-            nn.Conv1d(out_dim, out_dim, 4, stride=2, padding=1),
-        )
-
-    def forward(self, feature, feat_len):
-        # Fixed down-sample ratio
-        feat_len = torch.div(feat_len,4, rounding_mode="floor")
-        # Channel first
-        feature = feature.transpose(1,2) 
-        # Foward
-        feature = self.extractor(feature)
-        # Channel last
-        feature = feature.transpose(1, 2)
-
-        return feature, feat_len
-
-
 class RNNLayer(nn.Module):
     ''' RNN wrapper, includes time-downsampling'''
 
