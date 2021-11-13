@@ -3,6 +3,7 @@ data/
 ckpt/
 *.zip
 .vscode/
+result/
 
 
 # Byte-compiled / optimized / DLL files
