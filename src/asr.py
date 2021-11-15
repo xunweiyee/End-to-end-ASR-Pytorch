@@ -5,8 +5,8 @@ from torch.distributions.categorical import Categorical
 
 from src.classifier import MLPCLassfier, CNNClassifier, ANNClassifier
 from src.util import init_weights, init_gate
-from src.module import CNNExtractor, RNNLayer, ScaleDotAttention, LocationAwareAttention
-from src.extractor import VGGExtractor, MLPExtractor, RNNExtractor, ANNExtractor
+from src.module import RNNLayer, ScaleDotAttention, LocationAwareAttention
+from src.extractor import VGGExtractor, MLPExtractor, RNNExtractor, ANNExtractor, CNNExtractor
 
 import logging
 logger = logging.getLogger()
@@ -376,7 +376,7 @@ class Encoder(nn.Module):
             module_list.append(rnn_extractor)
             input_dim = rnn_extractor.out_dim
         if self.ann:
-            ann_extractor = ANNExtractor(input_size, out_dim=dim[0])
+            ann_extractor = ANNExtractor(input_size)
             module_list.append(ann_extractor)
             input_dim = ann_extractor.out_dim
         self.sample_rate *= 4

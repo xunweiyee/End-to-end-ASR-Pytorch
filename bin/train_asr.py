@@ -156,40 +156,46 @@ class Solver(BaseSolver):
 
                 # Logger
                 if (self.step == 1) or (self.step % self.PROGRESS_STEP == 0):
+                    # tr_loss = total_loss.cpu().item()
+                    # tr_ctc_loss = running_ctc / running_ctc_count
+                    # tr_att_wer = cal_er(self.tokenizer, att_output, txt)
+                    # tr_ctc_wer = cal_er(self.tokenizer, ctc_output, txt, ctc=True)
+                    # self.train_stats = {'total_loss': tr_loss, "ctc_loss": tr_ctc_loss, "ctc_wer": tr_ctc_wer, "att_wer": tr_att_wer}
+                    #
+                    # self.progress('Tr stat | Loss - {:.2f} | Grad. Norm - {:.2f} | {}'
+                    #               .format(tr_loss, grad_norm, self.timer.show()))
+                    # self.write_log(
+                    #     'loss', {'tr_ctc': ctc_loss, 'tr_att': att_loss})
+                    # self.write_log('emb_loss', {'tr': emb_loss})
+                    # self.write_log('wer', {'tr_att': tr_ctc_wer,
+                    #                        'tr_ctc': tr_att_wer})
+                    # if self.emb_fuse:
+                    #     if self.emb_decoder.fuse_learnable:
+                    #         self.write_log('fuse_lambda', {
+                    #                        'emb': self.emb_decoder.get_weight()})
+                    #     self.write_log(
+                    #         'fuse_temp', {'temp': self.emb_decoder.get_temp()})
+                    pass
+                # Validation
+                if (self.step == 1) or (self.step % self.valid_step == 0):
+                    self.validate()
+
                     tr_loss = total_loss.cpu().item()
                     tr_ctc_loss = running_ctc / running_ctc_count
                     tr_att_wer = cal_er(self.tokenizer, att_output, txt)
                     tr_ctc_wer = cal_er(self.tokenizer, ctc_output, txt, ctc=True)
                     self.train_stats = {'total_loss': tr_loss, "ctc_loss": tr_ctc_loss, "ctc_wer": tr_ctc_wer, "att_wer": tr_att_wer}
 
-                    self.progress('Tr stat | Loss - {:.2f} | Grad. Norm - {:.2f} | {}'
-                                  .format(tr_loss, grad_norm, self.timer.show()))
-                    self.write_log(
-                        'loss', {'tr_ctc': ctc_loss, 'tr_att': att_loss})
-                    self.write_log('emb_loss', {'tr': emb_loss})
-                    self.write_log('wer', {'tr_att': tr_ctc_wer,
-                                           'tr_ctc': tr_att_wer})
-                    if self.emb_fuse:
-                        if self.emb_decoder.fuse_learnable:
-                            self.write_log('fuse_lambda', {
-                                           'emb': self.emb_decoder.get_weight()})
-                        self.write_log(
-                            'fuse_temp', {'temp': self.emb_decoder.get_temp()})
-
-                # Validation
-                if (self.step == 1) or (self.step % self.valid_step == 0):
-                    self.validate()
-
-                    # tr_loss = total_loss.cpu().item()
-                    # tr_ctc_loss = running_ctc / self.step
-                    # tr_ctc_wer = cal_er(self.tokenizer, att_output, txt)
-                    # tr_att_wer = cal_er(self.tokenizer, ctc_output, txt, ctc=True)
-                    # self.train_stats = {'total_loss': tr_loss, "ctc_loss": tr_ctc_loss, "ctc_wer": tr_ctc_wer,
-                    #                     "att_wer": tr_att_wer}
-
-                    self.print_msg("Eval", n_epochs)
-                    self.print_msg("Train", n_epochs)
+                    eval_ctc_loss, eval_ctc_wer = self.print_msg("Eval", n_epochs)
+                    train_ctc_loss, train_ctc_wer = self.print_msg("Train", n_epochs)
                     print("total_loss", total_loss.item())
+
+                    self.write_log(
+                        'loss', {'tr_ctc': train_ctc_loss,
+                                 'eval_ctc': eval_ctc_loss})
+                    self.write_log('wer', {'tr_ctc': train_ctc_wer,
+                                           'eval_ctc': eval_ctc_wer})
+
 
                 # End of step
                 # https://github.com/pytorch/pytorch/issues/13246#issuecomment-529185354
@@ -293,3 +299,4 @@ class Solver(BaseSolver):
                     lr=""
                     )
         print(msg)
+        return ctc_loss, ctc_wer

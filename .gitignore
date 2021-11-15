@@ -1,9 +1,10 @@
 data/
 *.code-workspace
-ckpt/
 *.zip
+result/
 .idea/
-
+.vscode/
+ckpt/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -122,7 +123,6 @@ dmypy.json
 .pyre/
 
 # data and log directory
-log
 runs
 save
 TODO
