@@ -2,6 +2,7 @@ data/
 *.code-workspace
 ckpt/
 *.zip
+.idea/
 
 
 # Byte-compiled / optimized / DLL files
