@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions.categorical import Categorical
 
-from src.classifier import MLPCLassfier, CNNClassifier
+from src.classifier import MLPCLassfier, CNNClassifier, ANNClassifier
 from src.util import init_weights, init_gate
 from src.module import RNNLayer, ScaleDotAttention, LocationAwareAttention
 from src.extractor import VGGExtractor, MLPExtractor, RNNExtractor, ANNExtractor, CNNExtractor
@@ -396,6 +396,9 @@ class Encoder(nn.Module):
             self.out_dim = self.classifier.out_dim
         elif module == 'cnn':
             self.classifier = CNNClassifier(input_dim)
+            self.out_dim = self.classifier.out_dim
+        elif module == 'ann':
+            self.classifier = ANNClassifier(input_dim)
             self.out_dim = self.classifier.out_dim
         else:
             raise NotImplementedError
