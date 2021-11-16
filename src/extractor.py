@@ -1,5 +1,7 @@
 import torch
 from torch import nn as nn
+import torch.nn.functional as F
+import torch.nn.init as init
 
 import logging
 logger = logging.getLogger()
@@ -155,76 +157,148 @@ class RNNExtractor(nn.Module):
         return feature, feat_len
 
 
-
-# attention layer code inspired from: https://discuss.pytorch.org/t/self-attention-on-words-and-masking/5671/4
-import numpy as np
-import torch.nn.functional as F
-
-# attention layer code inspired from: https://discuss.pytorch.org/t/self-attention-on-words-and-masking/5671/4
 class ANNExtractor(nn.Module):
-    def __init__(self, hidden_size, batch_first=True):
+    ''' VGG extractor for ASR described in https://arxiv.org/pdf/1706.02737.pdf'''
+
+    def __init__(self, input_dim):
         super(ANNExtractor, self).__init__()
+        self.init_dim = 64
+        self.hide_dim = 128
+        in_channel, freq_dim, out_dim = self.check_dim(input_dim)
+        self.in_channel = in_channel
+        self.freq_dim = freq_dim
+        self.out_dim = 640
+        logging.info(f"ANNExtractor: input_dim {input_dim}, in_channel {self.in_channel}, freq_dim {self.freq_dim}, out_dim {self.out_dim}")
 
-        self.out_dim = hidden_size
-        self.hidden_size = hidden_size
-        self.batch_first = batch_first
+        width = freq_dim
+        logging.info(f"ANNExtractor: width {width}")
 
-        self.att_weights = nn.Parameter(torch.Tensor(1, hidden_size), requires_grad=True)
 
-        stdv = 1.0 / np.sqrt(self.hidden_size)
-        for weight in self.att_weights:
-            nn.init.uniform_(weight, -stdv, stdv)
-        
-        hidden_dim = hidden_size
-        self.fc1 = nn.Sequential(nn.Linear(hidden_dim, hidden_dim),
-                                 nn.ReLU()) 
-        self.fc2 = nn.Linear(hidden_dim, 1)
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channel, width, kernel_size=1, bias=False),
+            # nn.BatchNorm2d(width),
+            nn.ReLU(),
+        )
+        self.conv2 = nn.Sequential(
+            AttentionConv(width, width, kernel_size=7, padding=3),
+            # nn.BatchNorm2d(width),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),  # Half-time dimension
+        )
+        self.conv3 = nn.Sequential(
+            nn.Conv2d(width, 64, kernel_size=1, bias=False),
+            # nn.BatchNorm2d(64),
+            nn.MaxPool2d(2, stride=2)  # Half-time dimension
+        )
 
-    def get_mask(self):
-        pass
-
-    def forward(self, inputs, lengths):
-        if self.batch_first:
-            batch_size, max_len = inputs.size()[:2]
+    def check_dim(self, input_dim):
+        # Check input dimension, delta feature should be stack over channel.
+        if input_dim % 13 == 0:
+            # MFCC feature
+            return int(input_dim/13), 13, (13//4)*self.hide_dim
+        elif input_dim % 40 == 0:
+            # Fbank feature
+            return int(input_dim/40), 40, (40//4)*self.hide_dim
         else:
-            max_len, batch_size = inputs.size()[:2]
-            
-        # apply attention layer
-        weights = torch.bmm(inputs,
-                            self.att_weights  # (1, hidden_size)
-                            .permute(1, 0)  # (hidden_size, 1)
-                            .unsqueeze(0)  # (1, hidden_size, 1)
-                            .repeat(batch_size, 1, 1) # (batch_size, hidden_size, 1)
-                            )
-    
-        attentions = torch.softmax(F.relu(weights.squeeze()), dim=-1)
+            raise ValueError(
+            'Acoustic feature dimension for VGG should be 13/26/39(MFCC) or 40/80/120(Fbank) but got '+input_dim)
 
-        # create mask based on the sentence lengths
-        mask = torch.ones(attentions.size(), requires_grad=True).cuda()
-        for i, l in enumerate(lengths):  # skip the first sentence
-            if l < max_len:
-                mask[i, l:] = 0
+    def view_input(self, feature, feat_len):
+        # downsample time
+        # feat_len = feat_len//4
+        feat_len = torch.div(feat_len, 4, rounding_mode='floor')
+        # crop sequence s.t. t%4==0
+        if feature.shape[1] % 4 != 0:
+            feature = feature[:, :-(feature.shape[1] % 4), :].contiguous()
+        bs, ts, ds = feature.shape
+        # stack feature according to result of check_dim
+        feature = feature.view(bs, ts, self.in_channel, self.freq_dim)
+        feature = feature.transpose(1, 2)
+
+        return feature, feat_len
+
+    def forward(self, feature, feat_len):
         
+        logging.info(f"ANNExtractor: feature, feat_len {feature.shape}, {feat_len}")
+        # Feature shape BSxTxD -> BSxCH(1)xT/4xD
+        feature, feat_len = self.view_input(feature, feat_len) #downsample on time
+        logging.info(f"ANNExtractor: downsampled to {feature.shape}, {feat_len}")
+        # Foward
+        # BS x 1 x T/4 x D/4 -> BS x width x T/4 x D
+        feature = self.conv1(feature)
+        logging.info(f"ANNExtractor: extracted1 {feature.shape}")
+        # BS x width x T/4 x D/4 -> BS x width x T/8 x D/2 (attention)
+        feature = self.conv2(feature)
+        logging.info(f"ANNExtractor: extracted2 {feature.shape}")
 
-        # apply mask and renormalize attention scores (weights)
-        masked = attentions * mask
-        _sums = masked.sum(-1).unsqueeze(-1)  # sums per row
+        # BS x width x T/8 x D/2 -> BS x 64 x T/8 x D/4
+        feature = self.conv3(feature)
+        feature = F.relu(feature)
+        logging.info(f"ANNExtractor: extracted3 {feature.shape}")
+        # BS x 64 x T/8 x D/4 -> BS x T/8 x 64 x 8D
+        feature = feature.transpose(1, 2)
+        logging.info(f"ANNExtractor: feature.transpose {feature.shape}")
+        # BS x T/8 x 64 x 8D -> BS x T/8 x 8D
+        feature = feature.contiguous().view(feature.shape[0], feature.shape[1], -1)
+        logging.info(f"ANNExtractor: feature transformed {feature.shape}")
+
+        return feature, feat_len
+
+
+class AttentionConv(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, bias=False):
+        super(AttentionConv, self).__init__()
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+        self.groups = groups
+
+        assert self.out_channels % self.groups == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
+
+        self.rel_h = nn.Parameter(torch.randn(out_channels // 2, 1, 1, kernel_size, 1), requires_grad=True)
+        self.rel_w = nn.Parameter(torch.randn(out_channels // 2, 1, 1, 1, kernel_size), requires_grad=True)
+
+        self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
+        self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
+        self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
+
+        self.reset_parameters()
+
+    def forward(self, x):
+        batch, channels, height, width = x.size()
+
+        padded_x = F.pad(x, [self.padding, self.padding, self.padding, self.padding])
+        q_out = self.query_conv(x)
+        k_out = self.key_conv(padded_x)
+        v_out = self.value_conv(padded_x)
+
+        k_out = k_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
+        v_out = v_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
+
+        k_out_h, k_out_w = k_out.split(self.out_channels // 2, dim=1)
+        k_out = torch.cat((k_out_h + self.rel_h, k_out_w + self.rel_w), dim=1)
+
+        k_out = k_out.contiguous().view(batch, self.groups, self.out_channels // self.groups, height, width, -1)
+        v_out = v_out.contiguous().view(batch, self.groups, self.out_channels // self.groups, height, width, -1)
+
+        q_out = q_out.view(batch, self.groups, self.out_channels // self.groups, height, width, 1)
+
+        out = q_out * k_out
+        out = F.softmax(out, dim=-1)
+        out = torch.einsum('bnchwk,bnchwk -> bnchw', out, v_out).view(batch, -1, height, width)
+
+        return out
+
+    def reset_parameters(self):
+        init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
+        init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
+        init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
+
+        init.normal_(self.rel_h, 0, 1)
+        init.normal_(self.rel_w, 0, 1)
+
         
-        attentions = masked.div(_sums)
-
-        # apply attention weights
-        weighted = torch.mul(inputs, attentions.unsqueeze(-1).expand_as(inputs))
-
-        # get the final fixed vector representations of the sentences
-        representations = weighted.sum(1).squeeze().contiguous()
-        # print(attentions.shape, representations.shape)
-        z = self.fc1(representations)
-        # z = self.fc2(z)
-
-        # return z.unsqueeze(1), torch.ones(lengths.shape[0], dtype=int) # representations, attentions
-        return representations, attentions
-
-
 class CNNExtractor(nn.Module):
     ''' A simple 2-layer CNN extractor for acoustic feature down-sampling'''
 
