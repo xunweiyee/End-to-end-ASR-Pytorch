@@ -123,6 +123,7 @@ dmypy.json
 .pyre/
 
 # data and log directory
+log
 runs
 save
 TODO

@@ -44,7 +44,7 @@ class TedDataset(Dataset):
         text = Parallel(n_jobs=READ_FILE_THREADS)(
             delayed(read_text)(str(f)) for f in file_list)
         #text = Parallel(n_jobs=-1)(delayed(tokenizer.encode)(txt) for txt in text)
-        text = [tokenizer.encode(txt) for txt in text]
+        text = [tokenizer.encode(txt.upper()) for txt in text]
 
         # Sort dataset by text length
         #file_len = Parallel(n_jobs=READ_FILE_THREADS)(delayed(getsize)(f) for f in file_list)

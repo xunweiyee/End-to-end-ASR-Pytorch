@@ -8,10 +8,6 @@ from src.util import init_weights, init_gate
 from src.module import RNNLayer, ScaleDotAttention, LocationAwareAttention
 from src.extractor import VGGExtractor, MLPExtractor, RNNExtractor, ANNExtractor, CNNExtractor
 
-import logging
-logger = logging.getLogger()
-logging.basicConfig(level="INFO", format="%(levelname)s: %(filename)s: %(message)s")
-# logger.disabled = True
 
 class ASR(nn.Module):
     ''' ASR model, including Encoder/Decoder(s)'''
@@ -20,7 +16,6 @@ class ASR(nn.Module):
     def __init__(self, input_size, vocab_size, init_adadelta, ctc_weight, encoder, attention, decoder, emb_drop=0.0):
         super(ASR, self).__init__()
 
-        logging.info(f"ASR: encoder {encoder}")
         # Setup
         assert 0 <= ctc_weight <= 1
         self.vocab_size = vocab_size
@@ -353,7 +348,6 @@ class Encoder(nn.Module):
         input_dim = input_size
 
         # Prenet on audio feature
-        logging.info(f"Encoder: prenet {input_size}, out_dim {dim[0]}")
         self.extractor = None
         if self.vgg:
             vgg_extractor = VGGExtractor(input_size)
@@ -380,7 +374,6 @@ class Encoder(nn.Module):
             module_list.append(ann_extractor)
             input_dim = ann_extractor.out_dim
         self.sample_rate *= 4
-        logging.info(f"Encoder: prenet out_dim {dim[0]}")
 
         # Recurrent encoder
         if module in ['LSTM', 'GRU']:

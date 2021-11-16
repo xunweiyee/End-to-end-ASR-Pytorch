@@ -170,11 +170,11 @@ class AttentionConv(nn.Module):
 class ANNClassifier(BaseClassifier):
     def __init__(self, input_dim):
         super(ANNClassifier, self).__init__()
-        self.hidden_dim_1 = hidden_dim_1 = 10
-        self.hidden_dim_2 = hidden_dim_2 = 20
-        self.hidden_dim_3 = hidden_dim_3 = 40
-        self.hidden_dim_4 = hidden_dim_4 = 80
-        self.linear_input_dim = 80 * 80
+        self.hidden_dim_1 = hidden_dim_1 = 4  # Change to 4
+        self.hidden_dim_2 = hidden_dim_2 = 8  # Change to 8
+        self.hidden_dim_3 = hidden_dim_3 = 16  # Change to 16
+        self.hidden_dim_4 = hidden_dim_4 = 32  # Change to 32
+        self.linear_input_dim = hidden_dim_4 * input_dim // 2**4        # Change to 32 * 80
         self.out_dim = 80
 
         attn_hyperparams = {

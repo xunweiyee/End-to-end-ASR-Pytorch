@@ -9,6 +9,8 @@ from src.asr import ASR
 from src.decode import BeamDecoder
 from src.ctc import CTCBeamDecoder
 from src.data import load_dataset
+from src.text import load_text_encoder
+
 
 class Solver(BaseSolver):
     ''' Solver for training'''
@@ -220,5 +222,24 @@ def ctc_beam_decode(data, model, device):
     # Decode
     with torch.no_grad():
         hyp = model(feat, feat_len)
+
+        debug = False
+        if debug:
+            dict = {'mode': 'subword', 'vocab_file': 'tests/sample_data/subword-16k.model'}
+            tokenizer = load_text_encoder(**dict)
+            hyp_text = tokenizer.decode(hyp[0])
+            label_text = tokenizer.decode([int(i) for i in txt[0]])
+            print("===================")
+            print()
+            print()
+            print()
+            print('hyp-----')
+            # print(hyp)
+            print(hyp_text)
+            print('label----')
+            print(label_text)
+
+
+
 
     return (name[0], hyp, txt[0]) # Note: bs == 1
