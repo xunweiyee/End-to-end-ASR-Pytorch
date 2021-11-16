@@ -3,12 +3,6 @@ from torch import nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 
-import logging
-logger = logging.getLogger()
-logging.basicConfig(level="INFO", format="%(filename)s: %(message)s")
-# logging.basicConfig(level="INFO", format="%(levelname)s: %(filename)s: %(message)s")
-logger.disabled = True
-
 
 class VGGExtractor(nn.Module):
     ''' VGG extractor for ASR described in https://arxiv.org/pdf/1706.02737.pdf'''
@@ -21,7 +15,6 @@ class VGGExtractor(nn.Module):
         self.in_channel = in_channel
         self.freq_dim = freq_dim
         self.out_dim = out_dim
-        logging.info(f"VGGExtractor: input_dim {input_dim}, in_channel {self.in_channel}, freq_dim {self.freq_dim}, out_dim {self.out_dim}")
 
         self.extractor = nn.Sequential(
             nn.Conv2d(in_channel, self.init_dim, 3, stride=1, padding=1),
@@ -68,19 +61,14 @@ class VGGExtractor(nn.Module):
         # BSx128xT/4xD/4 -> BSxT/4x128xD/4
         #  BS x T/4 x 128 x D/4 -> BS x T/4 x 32D
 
-        logging.info(f"VGGExtractor: feature, feat_len {feature.shape}, {feat_len}")
         # Feature shape BSxTxD -> BS x CH(num of delta) x T x D(acoustic feature dim)
         feature, feat_len = self.view_input(feature, feat_len) #downsample on time
-        logging.info(f"VGGExtractor: downsampled to {feature.shape}, {feat_len}")
         # Foward
         feature = self.extractor(feature)
-        logging.info(f"VGGExtractor: extracted {feature.shape}")
         # BSx128xT/4xD/4 -> BSxT/4x128xD/4
         feature = feature.transpose(1, 2)
-        logging.info(f"VGGExtractor: feature.transpose {feature.shape}")
         #  BS x T/4 x 128 x D/4 -> BS x T/4 x 32D
         feature = feature.contiguous().view(feature.shape[0], feature.shape[1], self.out_dim)
-        logging.info(f"VGGExtractor: feature transformed {feature.shape}\n")
 
         return feature, feat_len
 
@@ -94,7 +82,6 @@ class MLPExtractor(nn.Module):
     def __init__(self, input_dim, out_dim):
         super(MLPExtractor, self).__init__()
 
-        logging.info(f"MLPExtractor: {input_dim}")
         self.out_dim = out_dim
         self.hide_dim = input_dim * 3
         self.extractor = nn.Sequential(
@@ -139,20 +126,17 @@ class RNNExtractor(nn.Module):
 
     def forward(self, feature, feat_len):
 
-        logging.info(f"RNNExtractor: forward {feature.shape}, {feat_len}")
         # feat_len = feat_len//4
         feat_len = torch.div(feat_len, 4, rounding_mode='floor')
         feature, _ = self.layer(feature)
         # Normalization
         feature = self.dp(feature)
-        logging.info(f"RNNExtractor: extracted {feature.shape}")
         
         # Downsample timestep
         sample_rate = 4
         if feature.shape[1] % sample_rate != 0:
             feature = feature[:, :-(feature.shape[1] % 4), :].contiguous()
         feature = feature[:, ::sample_rate, :].contiguous()
-        logging.info(f"RNNExtractor: downsampled {feature.shape} {feat_len}\n")
 
         return feature, feat_len
 
@@ -168,10 +152,8 @@ class ANNExtractor(nn.Module):
         self.in_channel = in_channel
         self.freq_dim = freq_dim
         self.out_dim = 640
-        logging.info(f"ANNExtractor: input_dim {input_dim}, in_channel {self.in_channel}, freq_dim {self.freq_dim}, out_dim {self.out_dim}")
 
         width = freq_dim
-        logging.info(f"ANNExtractor: width {width}")
 
 
         self.conv1 = nn.Sequential(
@@ -219,28 +201,21 @@ class ANNExtractor(nn.Module):
 
     def forward(self, feature, feat_len):
         
-        logging.info(f"ANNExtractor: feature, feat_len {feature.shape}, {feat_len}")
         # Feature shape BSxTxD -> BSxCH(1)xT/4xD
         feature, feat_len = self.view_input(feature, feat_len) #downsample on time
-        logging.info(f"ANNExtractor: downsampled to {feature.shape}, {feat_len}")
         # Foward
         # BS x 1 x T/4 x D/4 -> BS x width x T/4 x D
         feature = self.conv1(feature)
-        logging.info(f"ANNExtractor: extracted1 {feature.shape}")
         # BS x width x T/4 x D/4 -> BS x width x T/8 x D/2 (attention)
         feature = self.conv2(feature)
-        logging.info(f"ANNExtractor: extracted2 {feature.shape}")
 
         # BS x width x T/8 x D/2 -> BS x 64 x T/8 x D/4
         feature = self.conv3(feature)
         feature = F.relu(feature)
-        logging.info(f"ANNExtractor: extracted3 {feature.shape}")
         # BS x 64 x T/8 x D/4 -> BS x T/8 x 64 x 8D
         feature = feature.transpose(1, 2)
-        logging.info(f"ANNExtractor: feature.transpose {feature.shape}")
         # BS x T/8 x 64 x 8D -> BS x T/8 x 8D
         feature = feature.contiguous().view(feature.shape[0], feature.shape[1], -1)
-        logging.info(f"ANNExtractor: feature transformed {feature.shape}")
 
         return feature, feat_len
 
