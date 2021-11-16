@@ -1,3 +1,4 @@
+
 # Most of the parameters will be imported from the training config
 src:
   ckpt: 'ckpt/cnn_rnn_sd0/best_ctc.pth'
@@ -8,9 +9,9 @@ data:
     dev_split: ['dev-clean']
     test_split: ['test-clean']
 decode:
-  beam_size: 10
-  vocab_candidate: 20
+  beam_size: 2
+  vocab_candidate: 2
   lm_path: 'ckpt/lm_example_sd0/best_ppx.pth'
   lm_config: 'config/libri/lm_example.yaml'
-  lm_weight: 0
+  lm_weight: 0.0
   ctc_weight: 1.0
