@@ -11,7 +11,7 @@ from src.extractor import VGGExtractor, MLPExtractor, RNNExtractor, ANNExtractor
 import logging
 logger = logging.getLogger()
 logging.basicConfig(level="INFO", format="%(levelname)s: %(filename)s: %(message)s")
-# logger.disabled = True
+logger.disabled = True
 
 class ASR(nn.Module):
     ''' ASR model, including Encoder/Decoder(s)'''
