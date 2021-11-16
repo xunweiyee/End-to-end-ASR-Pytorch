@@ -43,6 +43,7 @@ class Timer():
 
 # Reference : https://github.com/espnet/espnet/blob/master/espnet/nets/pytorch_backend/e2e_asr.py#L168
 
+ann_classifier_warning_sounded = False
 
 def init_weights(module):
     # Exceptions
@@ -66,6 +67,11 @@ def init_weights(module):
                     n *= k
                 stdv = 1. / math.sqrt(n)
                 data.normal_(0, stdv)
+            elif data.dim() == 5:
+                global ann_classifier_warning_sounded
+                if not ann_classifier_warning_sounded:
+                    print("\n\nError unless ANNClassifier is not being used:\nParameter dimension is 5 in init_weights(), src/util.py line 48, called in asr.py line 48.\n\n\n")
+                    ann_classifier_warning_sounded = True
             else:
                 raise NotImplementedError
 

@@ -2,6 +2,7 @@ data/
 *.code-workspace
 *.zip
 result/
+.idea/
 .vscode/
 ckpt/
 
