@@ -5,6 +5,7 @@ result/
 .idea/
 .vscode/
 ckpt/
+assets/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
