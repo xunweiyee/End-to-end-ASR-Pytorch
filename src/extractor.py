@@ -58,10 +58,6 @@ class VGGExtractor(nn.Module):
     def forward(self, feature, feat_len):
 
         # Feature shape BSxTxD -> BS x CH(num of delta) x T x D(acoustic feature dim)
-        # BSx128xT/4xD/4 -> BSxT/4x128xD/4
-        #  BS x T/4 x 128 x D/4 -> BS x T/4 x 32D
-
-        # Feature shape BSxTxD -> BS x CH(num of delta) x T x D(acoustic feature dim)
         feature, feat_len = self.view_input(feature, feat_len) #downsample on time
         # Foward
         feature = self.extractor(feature)
@@ -74,10 +70,8 @@ class VGGExtractor(nn.Module):
 
 
 class MLPExtractor(nn.Module):
-    '''
-        A simple MLP extractor for acoustic feature down-sampling
-        Every 4 frame will be convert to corresponding features by MLP
-    '''
+    ''' A simple MLP extractor for acoustic feature down-sampling
+    Every 4 frame will be convert to corresponding features by MLP'''
 
     def __init__(self, input_dim, out_dim):
         super(MLPExtractor, self).__init__()
@@ -113,14 +107,13 @@ class MLPExtractor(nn.Module):
 
 
 class RNNExtractor(nn.Module):
-    ''' A simple 2-layer RNN extractor for acoustic feature down-sampling'''
+    ''' A 2-layer RNN extractor for acoustic feature down-sampling'''
 
     def __init__(self, input_dim, out_dim):
         super(RNNExtractor, self).__init__()
 
         self.out_dim = out_dim
         self.layer = nn.RNN(input_dim, self.out_dim)
-        # self.ln = nn.LayerNorm(self.out_dim)
         self.dp = nn.Dropout(p=0.2)
         self.linear = nn.Linear(self.out_dim, self.out_dim)
 
@@ -142,7 +135,7 @@ class RNNExtractor(nn.Module):
 
 
 class ANNExtractor(nn.Module):
-    ''' VGG extractor for ASR described in https://arxiv.org/pdf/1706.02737.pdf'''
+    ''' ANN extractor with self-attention mechanism from https://github.com/leaderj1001/Stand-Alone-Self-Attention'''
 
     def __init__(self, input_dim, groups=8):
         super(ANNExtractor, self).__init__()
@@ -152,9 +145,7 @@ class ANNExtractor(nn.Module):
         self.in_channel = in_channel
         self.freq_dim = freq_dim
         self.out_dim = 640
-
         width = freq_dim
-
 
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channel, width, 3, stride=1, padding=1),
@@ -205,12 +196,11 @@ class ANNExtractor(nn.Module):
         # Feature shape BSxTxD -> BSxCH(1)xT/4xD
         feature, feat_len = self.view_input(feature, feat_len) #downsample on time
         # Foward
-        # BS x 1 x T/4 x D/4 -> BS x width x T/4 x D
+        # BS x 1 x T/4 x D/4 -> BS x width x T/8 x D
         feature = self.conv1(feature)
-        # BS x width x T/4 x D/4 -> BS x width x T/8 x D/2 (attention)
+        # BS x width x T/8 x D/4 -> BS x width x T/8 x D/4 (attention)
         feature = self.conv2(feature)
-
-        # BS x width x T/8 x D/2 -> BS x 64 x T/8 x D/4
+        # BS x width x T/8 x D/4 -> BS x 64 x T/8 x D/4
         feature = self.conv3(feature)
         feature = F.relu(feature)
         # BS x 64 x T/8 x D/4 -> BS x T/8 x 64 x 8D
@@ -221,7 +211,6 @@ class ANNExtractor(nn.Module):
         return feature, feat_len
 
 
-# https://github.com/leaderj1001/Stand-Alone-Self-Attention
 class AttentionConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, bias=False):
         super(AttentionConv, self).__init__()
