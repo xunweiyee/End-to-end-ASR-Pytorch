@@ -144,7 +144,7 @@ class RNNExtractor(nn.Module):
 class ANNExtractor(nn.Module):
     ''' VGG extractor for ASR described in https://arxiv.org/pdf/1706.02737.pdf'''
 
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, groups=8):
         super(ANNExtractor, self).__init__()
         self.init_dim = 64
         self.hide_dim = 128
@@ -157,20 +157,21 @@ class ANNExtractor(nn.Module):
 
 
         self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channel, width, kernel_size=1, bias=False),
-            # nn.BatchNorm2d(width),
-            nn.ReLU(),
-        )
-        self.conv2 = nn.Sequential(
-            AttentionConv(width, width, kernel_size=7, padding=3),
-            # nn.BatchNorm2d(width),
+            nn.Conv2d(in_channel, width, 3, stride=1, padding=1),
+            nn.BatchNorm2d(width),
             nn.ReLU(),
             nn.MaxPool2d(2, stride=2),  # Half-time dimension
+            nn.Conv2d(width, width, 3, stride=1, padding=1),
+            nn.MaxPool2d(2, stride=2),  # Half-time dimension
+        )
+        self.conv2 = nn.Sequential(
+            AttentionConv(width, width, kernel_size=7, padding=3, groups=groups),
+            nn.BatchNorm2d(width),
+            nn.ReLU(),
         )
         self.conv3 = nn.Sequential(
-            nn.Conv2d(width, 64, kernel_size=1, bias=False),
-            # nn.BatchNorm2d(64),
-            nn.MaxPool2d(2, stride=2)  # Half-time dimension
+            nn.Conv2d(width, 64, 3, stride=1, padding=1),
+            nn.BatchNorm2d(64),
         )
 
     def check_dim(self, input_dim):
@@ -220,6 +221,7 @@ class ANNExtractor(nn.Module):
         return feature, feat_len
 
 
+# https://github.com/leaderj1001/Stand-Alone-Self-Attention
 class AttentionConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, bias=False):
         super(AttentionConv, self).__init__()
