@@ -35,7 +35,7 @@ hparas:                                   # Experiment hyper-parameters
 model:                                    # Model architecture
   ctc_weight: 1                         # Weight for CTC loss
   encoder:
-    prenet: 'cnn'                         # 'vgg'/'cnn'/'mlp'
+    prenet: 'ann'                         # 'vgg'/'cnn'/'mlp'
     module: 'LSTM'                        # 'LSTM'/'GRU'/'Transformer'/'mlp'
 #    module: 'Transformer'                        # 'LSTM'/'GRU'/'Transformer'
     bidirection: True

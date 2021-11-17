@@ -22,20 +22,20 @@ Investigating performance of Classifier
 LibriSpeech ===================================================================
 
 
-| Extractor | Classifier |CTC-WER|ATT-WER|CTC-Loss
-|---------|-------------|-------|-----|---|
-| MLP    | RNN|(step = 208.0K, wer = 0.99)| //|6.63263 
-| CNN  | RNN|(step = 605.0K, wer = 0.13)|(step = 565.0K, wer = 0.16)|//
+| Extractor | Classifier |CTC-WER|CTC-Loss
+|---------|-------------|-------|---|
+| MLP    | RNN|0.99|6.63263 
+| CNN  | RNN|0.2353|1.429
 | ANN  | RNN| | |
-| RNN   | RNN |
+| RNN   | RNN | 0.263| 1.62 |
 
 
 Investigating performance of Classifier
 
-| Extractor | Classifier |CTC-WER|ATT-WER|CTC-Loss
-|---------|-------------|-------|-----|---|
-| CNN    | MLP|(step = 488.0K, wer = 0.13)| //|3.30768| 
-| CNN  | CNN|
+| Extractor | Classifier |CTC-WER|CTC-Loss
+|---------|-------------|------------|---|
+| CNN    | MLP|(step = 488.0K, wer = 0.13) (retraining with reduced libri)|3.30768| 
+| CNN  | CNN|1|7.031
 | CNN  | ANN|
 
 //Traning time too long, to be calculated on our own data set
