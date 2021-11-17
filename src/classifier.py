@@ -20,9 +20,9 @@ class BaseClassifier(nn.Module):
         value_to_pad: Constant value used for padding.
         """
         number_of_timesteps = tensor.size(dim=timestep_dimension)
-        print(f"{tensor.size()=}, {number_of_timesteps=}")
-        
-        assert number_of_timesteps <= max_timesteps, f"Input received that is longer than {max_timesteps=}. Unable to pad."
+        # print(f"{tensor.size()=}, {number_of_timesteps=}")
+        # {max_timesteps =}
+        assert number_of_timesteps <= max_timesteps, f"Input received that is longer than . Unable to pad."
 
         number_of_padded_timesteps = max_timesteps - number_of_timesteps
         padding = [0, 0] * (len(tensor.shape) - timestep_dimension - 1) + [0, number_of_padded_timesteps]  # (0, 1) pads last dim by 1; (0, 1, 0, 3) pads last dim by 1 and second last dim by 3
@@ -62,7 +62,7 @@ class MLPCLassfier(nn.Module):
 class CNNClassifier(BaseClassifier):
     def __init__(self, input_dim):
         super(CNNClassifier, self).__init__()
-        self.hidden_dim_1 = hidden_dim_1 = input_dim // 16
+        self.hidden_dim_1 = hidden_dim_1 = input_dim // 64
         self.hidden_dim_2 = hidden_dim_2 = hidden_dim_1 * 2
 
         self.out_dim = input_dim // 4

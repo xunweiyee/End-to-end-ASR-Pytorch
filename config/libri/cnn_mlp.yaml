@@ -36,7 +36,7 @@ model:                                    # Model architecture
   ctc_weight: 1                         # Weight for CTC loss
   encoder:
     prenet: 'vgg'                         # 'vgg'/'cnn'/'mlp'
-    module: 'ann'                        # 'LSTM'/'GRU'/'Transformer'/'mlp'
+    module: 'mlp'                        # 'LSTM'/'GRU'/'Transformer'/'mlp'
 #    module: 'Transformer'                        # 'LSTM'/'GRU'/'Transformer'
     bidirection: True
     dim: [512,512,512,512,512]
