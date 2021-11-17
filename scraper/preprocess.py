@@ -6,6 +6,7 @@ import random
 import shutil
 
 import scraper
+import remove_applause
 import re
 import subprocess
 import num2words
@@ -13,11 +14,8 @@ import pydub
 from pydub import AudioSegment
 from tqdm import tqdm
 import logging
-
 logger = logging.getLogger()
-# logging.basicConfig(level="INFO", format="%(levelname)s: %(filename)s: %(message)s")
-# logging.basicConfig(level='WARNING', format="%(levelname)s: %(filename)s: %(message)s")
-# logger.setLevel(logging.WARNING)
+logging.basicConfig(level="INFO", format="%(levelname)s: %(filename)s: %(message)s")
 
 
 random.seed(42)
@@ -224,10 +222,13 @@ def split_dataset(ratio=[.6, .2, .2]):
 def main():
     print('Scraping data...')
     scraper.main(number_of_talks=500, starting_video_id=2000) # 1000-1500
-    print()
-    print('Start preprocessing...')
+
+    print('\nStart preprocessing...')
     build_dataset(src_path, sample=100)
     split_dataset(ratio=ratio)
+
+    print("\nRemoving laughter and applause audio files...")
+    remove_applause.main(corpus_path)
 
 
 if __name__ == "__main__":
