@@ -70,7 +70,7 @@ def init_weights(module):
             elif data.dim() == 5:
                 global ann_classifier_warning_sounded
                 if not ann_classifier_warning_sounded:
-                    print("\n\nError unless ANNClassifier is not being used:\nParameter dimension is 5 in init_weights(), src/util.py line 48, called in asr.py line 48.\n\n\n")
+                    print("\n\nIgnore this warning if ANNClassifier is being used:\nParameter dimension is 5 in init_weights(), src/util.py line 48, called in asr.py line 48.\n\n\n")
                     ann_classifier_warning_sounded = True
             else:
                 raise NotImplementedError
