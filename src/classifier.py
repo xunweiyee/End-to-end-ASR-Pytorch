@@ -167,14 +167,13 @@ class AttentionConv(nn.Module):
         init.normal_(self.rel_h, 0, 1)
         init.normal_(self.rel_w, 0, 1)
 
+
 class ANNClassifier(BaseClassifier):
     def __init__(self, input_dim):
         super(ANNClassifier, self).__init__()
-        self.hidden_dim_1 = hidden_dim_1 = 4
-        self.hidden_dim_2 = hidden_dim_2 = 8
-        self.hidden_dim_3 = hidden_dim_3 = 16
-        self.hidden_dim_4 = hidden_dim_4 = 32
-        self.linear_input_dim = 32 * 32
+        self._pool_value = 4
+        self.hidden_dim_1 = hidden_dim_1 = 20
+        self.linear_input_dim = hidden_dim_1 * input_dim // self._pool_value
         self.out_dim = 80
 
         attn_hyperparams = {
@@ -182,12 +181,9 @@ class ANNClassifier(BaseClassifier):
             "padding": 1,
         }
 
-        self.attn1 = AttentionConv(1, hidden_dim_1, **attn_hyperparams)
-        self.attn2 = AttentionConv(hidden_dim_1, hidden_dim_2, **attn_hyperparams)
-        self.attn3 = AttentionConv(hidden_dim_2, hidden_dim_3, **attn_hyperparams)
-        self.attn4 = AttentionConv(hidden_dim_3, hidden_dim_4, **attn_hyperparams)
+        self.attn = AttentionConv(1, hidden_dim_1, **attn_hyperparams)
         self.dense = nn.Linear(self.linear_input_dim, self.out_dim)
-        self.pool = nn.MaxPool2d((1, 2))
+        self.pool = nn.MaxPool2d((1, self._pool_value))
 
     def reshape_input(self, feature, group_size):
         down_sample_len = feature.size(1) // group_size
@@ -200,28 +196,18 @@ class ANNClassifier(BaseClassifier):
         # Therefore, inputs must be unsqueezed.
         feature = feature.unsqueeze(dim=0).unsqueeze(dim=1)
 
+        # Format: output_channels x new_timesteps x new_features
 
-        # Format: input_channels x timesteps x features --> output_channels x new_timesteps x new_features
-                                                    # 1 x N x 1280
-        feature = self.pool(feature)                # 1 x N x 640
-        feature = self.attn1(feature)               # 10 x N x 640
-        feature = F.relu(feature)
-        feature = self.pool(feature)                # 10 x N x 320
-        feature = self.attn2(feature)               # 20 x N x 320
-        feature = F.relu(feature)
-        feature = self.pool(feature)                # 20 x N x 160
-        feature = self.attn3(feature)               # 40 x N x 160
-        feature = F.relu(feature)
-        feature = self.pool(feature)                # 40 x N x 80
-        feature = self.attn4(feature)               # 80 x N x 80
+                                                   # 1 x N x 1280
+        feature = self.pool(feature)               # 1 x N x 320
+        feature = self.attn(feature)               # 20 x N x 320
         feature = F.relu(feature)
 
-
-        feature = feature.transpose(0, 1)  # N x 80 x 80
-        feature = feature.view(-1, self.linear_input_dim) #  N x (80 x 80)
+        feature = feature.transpose(0, 1)  # N x 20 x 320
+        feature = feature.view(-1, self.linear_input_dim)   # N x (20 x 320)
         feature = torch.stack([
             self.dense(feature[index].unsqueeze(dim=0)) 
             for index in range(feature.size()[0])])  # N x 80
         feature = feature.transpose(0, 1)  # 80 x N
-        
+
         return feature
