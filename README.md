@@ -21,7 +21,7 @@ To run this project:
 
 Data is collected from the [Ted2srt webpage](https://ted2srt.org "Ted2srt Homepage").
 
-Run `python3 scraper/preprocess.py` from root direcory to scrape and generate dataset.
+Run `python3 scraper/preprocess.py` from root directory to scrape and generate dataset.
 The script will:
 1. Scrape data from website.
 2. Preprocess the data.
