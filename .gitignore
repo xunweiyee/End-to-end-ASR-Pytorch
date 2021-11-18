@@ -6,6 +6,7 @@ result/
 .vscode/
 ckpt/
 assets/
+jupyter/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
