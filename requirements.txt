@@ -8,3 +8,9 @@ tb-nightly
 torch>=1.2.0
 torchaudio
 matplotlib
+num2words
+pydub
+moviepy
+beautifulsoup4
+urllib
+requests
