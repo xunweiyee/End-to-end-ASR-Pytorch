@@ -1,5 +1,73 @@
 # End-to-end Automatic Speech Recognition Systems - PyTorch Implementation
 
+
+
+### Module Code: **CS5242** 
+
+#### Semester: AY2021-22 Sem 1
+#### Group 40
+- Liu Shiru (A0187939A)
+- Lim Yu Rong, Samuel (A0183921A)
+- Yee Xun Wei (A0228597L)
+
+To run this project:
+1. Clone the repository.
+2. Install requirements via `~/requirements.txt`.
+
+
+
+## Dataset
+
+Data is collected from the [Ted2srt webpage](https://ted2srt.org "Ted2srt Homepage").
+
+Run `python3 scraper/preprocess.py` from root direcory to scrape and generate dataset.
+The script will:
+1. Scrape data from website.
+2. Preprocess the data
+3. Split the data to train-dev-test sets.
+
+Scraped data is saved at `scraper/data/`, processed data will be saved to `data/`.
+
+
+
+## Training
+
+To train each model:
+
+1. In the root directory, run the command `python3 main.py --config config/<dataset>/<config_file>.yaml --njobs 8`.
+
+### Configuration Files
+
+To use our dataset, set `<dataset>` as `ted` to use scraped data, or `libri` to use public data from [OpenSRL](https://www.openslr.org/12/).
+
+Configuration files are stored as:
+
+#### Train Extractors
+
+| Extractor | Classifier | Configuration file |
+|-----------|------------|--------------------|
+| MLP       | RNN        | mlp_rnn.yaml       |
+| CNN       | RNN        | cnn_rnn.yaml       |
+| ANN       | RNN        | ann_rnn.yaml       |
+| RNN       | RNN        | rnn_rnn.yaml       |
+
+#### Train Classifiers
+
+| Extractor | Classifier | Configuration file |
+|-----------|------------|--------------------|
+| CNN       | MLP        | cnn_mlp.yaml       |
+| CNN       | CNN        | cnn_cnn.yaml       |
+| CNN       | ANN        | cnn_ann.yaml       |
+
+
+## Experiment results
+
+Experiment results are stored at [experiment_results.md](experiment_results.md).
+
+
+
+----
+
 This is an open source project (formerly named **Listen, Attend and Spell - PyTorch Implementation**) for end-to-end ASR by [Tzu-Wei Sung](https://github.com/WindQAQ) and me.
 Implementation was mostly done with Pytorch, the well known deep learning toolkit.
 
