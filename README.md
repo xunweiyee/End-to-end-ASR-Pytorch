@@ -1,6 +1,7 @@
 # End-to-end Automatic Speech Recognition Systems - PyTorch Implementation
 
-
+---
+**NOTE** for CS5242 submission
 
 ### Module Code: **CS5242** 
 
@@ -23,7 +24,7 @@ Data is collected from the [Ted2srt webpage](https://ted2srt.org "Ted2srt Homepa
 Run `python3 scraper/preprocess.py` from root direcory to scrape and generate dataset.
 The script will:
 1. Scrape data from website.
-2. Preprocess the data
+2. Preprocess the data.
 3. Split the data to train-dev-test sets.
 
 Scraped data is saved at `scraper/data/`, processed data will be saved to `data/`.
