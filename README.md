@@ -75,19 +75,21 @@ Experiment results are stored at [experiment_results.md](experiment_results.md).
   <img src="assets/model_architecture.png" height="300">
 </p>
 
-There are two main subcomponents. First is the extractor, the extractor further extract the audio features for every frame into a latent representation $h$. Then we have the classifier, that takes in the latent representation, make prediction for each frame by classifying them into a predefined set of word token such as “a”, “the”, “-tion” etc. Lastly, the Beam search decoding algorithm decode the raw classification results into a sentence. A typical ASR has a CNN extractor and a RNN classifier.
+There are two main subcomponents. First is the extractor, the extractor further extracts the audio features for every frame into a latent representation $h$. Then we have the classifier, that takes in the latent representation, make prediction for each frame by classifying them into a predefined set of word token such as “a”, “the”, “-tion” etc. Lastly, the Beam search decoding algorithm decode the raw classification results into a sentence. A typical ASR has a CNN extractor and a RNN classifier.
 
 <p align="center">
   <img src="assets/extractor.png" height="250">
 </p>
 
-For our experimentation we firstly fix the classifier to be RNN, and compare on how the 4 NN variants perform as the extractor.
+For our experimentation we firstly fix the classifier to be RNN, and compare how the 4 NN variants perform as the extractor.
 
 <p align="center">
   <img src="assets/classifier.png" height="250">
 </p>
 
 Secondly, we fix the Extractor to be CNN. and replace the classifier with the 4 NN variants.
+
+
 
 ---
 
