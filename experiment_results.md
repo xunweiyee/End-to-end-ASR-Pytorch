@@ -1,7 +1,8 @@
-Investigating performance of Feature Extractor
+## Investigating performance of Feature Extractor
 
-TedSrt =====================================================================
+### TedSrt
 
+Comparing performance of Extractor
 
 | Extractor | Classifier | CTC-WER | CTC-Loss |
 |-----------|------------|---------|----------|
@@ -11,7 +12,7 @@ TedSrt =====================================================================
 | RNN       | RNN        | 0.95    | 6.53     |
 
 
-Investigating performance of Classifier
+Comparing performance of Classifier
 
 | Extractor | Classifier | CTC-WER | CTC-Loss |
 |-----------|------------|---------|----------|
@@ -19,8 +20,11 @@ Investigating performance of Classifier
 | CNN       | CNN        | 0.95    |6.745     |
 | CNN       | ANN        | 0.99    |6.98      |
 
-LibriSpeech ===================================================================
+---
 
+### LibriSpeech
+
+Comparing performance of Extractor
 
 | Extractor | Classifier | CTC-WER | CTC-Loss |
 |-----------|------------|---------|----------|
@@ -30,7 +34,7 @@ LibriSpeech ===================================================================
 | RNN       | RNN        | 0.263   | 1.62     |
 
 
-Investigating performance of Classifier
+Comparing performance of Classifier
 
 | Extractor | Classifier | CTC-WER | CTC-Loss |
 |-----------|------------|---------|----------|
