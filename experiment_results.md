@@ -26,7 +26,7 @@ LibriSpeech ===================================================================
 |---------|-------------|-------|---|
 | MLP    | RNN|0.99|6.63263 
 | CNN  | RNN|0.21926|1.32976
-| ANN  | RNN| | |
+| ANN  | RNN|0.9954 |6.87 |
 | RNN   | RNN | 0.263| 1.62 |
 
 
@@ -34,9 +34,9 @@ Investigating performance of Classifier
 
 | Extractor | Classifier |CTC-WER|CTC-Loss
 |---------|-------------|------------|---|
-| CNN    | MLP|(step = 488.0K, wer = 0.13) (retraining with reduced libri)|3.30768| 
-| CNN  | CNN|1|7.031
-| CNN  | ANN|
+| CNN    | MLP|0.5884|4.092| 
+| CNN  | CNN|1|7.031|
+| CNN  | ANN|0.9982|7.065
 
 //Traning time too long, to be calculated on our own data set
 1. Metrics are saved in two dictionaries: Solver.eval_stats and Solver.train_stats
