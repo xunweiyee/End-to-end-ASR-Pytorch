@@ -28,7 +28,7 @@ The script will:
 2. Preprocess the data.
 3. Split the data to train-dev-test sets.
 
-Scraped data is saved at `scraper/data/`, processed data will be saved to `data/`.
+Scraped data is saved at `scraper/data/`, processed data will be saved to `data/`. Alternatively, download preprocessed data [here](https://nusu-my.sharepoint.com/:u:/g/personal/e0674581_u_nus_edu/EdCosjueRfVIm2kQK3RKBdYBrtlVWU8hsBzcjG7cb9Uo3w?e=fkWh09).
 
 
 
