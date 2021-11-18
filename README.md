@@ -1,7 +1,7 @@
 # End-to-end Automatic Speech Recognition Systems - PyTorch Implementation
 
 ---
-**NOTE** for CS5242 submission
+> **NOTE** for CS5242 submission
 
 ### Module Code: **CS5242** 
 
