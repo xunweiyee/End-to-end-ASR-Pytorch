@@ -81,7 +81,7 @@ There are two main subcomponents. First is the extractor, the extractor further 
   <img src="assets/extractor.png" height="250">
 </p>
 
-For our experimentation we firstly fix the classifier to be RNN, and investate on how the 4 NN variants perform as the extractor.
+For our experimentation we firstly fix the classifier to be RNN, and compare on how the 4 NN variants perform as the extractor.
 
 <p align="center">
   <img src="assets/classifier.png" height="250">
