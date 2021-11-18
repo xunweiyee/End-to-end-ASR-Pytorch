@@ -5,7 +5,6 @@ result/
 .idea/
 .vscode/
 ckpt/
-assets/
 jupyter/
 
 # Byte-compiled / optimized / DLL files
