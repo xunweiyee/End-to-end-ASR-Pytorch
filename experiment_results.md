@@ -1,6 +1,8 @@
-## Investigating performance of Feature Extractor
+# Experiment Results
 
 ### TedSrt
+
+> Data scraped from [Ted2Srt](https://ted2srt.org/). We tried training on 1Gb of dataset but the result is almost similar.
 
 Comparing performance of Extractor
 
@@ -24,6 +26,8 @@ Comparing performance of Classifier
 
 ### LibriSpeech
 
+> Public dataset by [OpenSLR](https://www.openslr.org/12/). We train models on it and compare the results.
+
 Comparing performance of Extractor
 
 | Extractor | Classifier | CTC-WER | CTC-Loss |
@@ -41,10 +45,3 @@ Comparing performance of Classifier
 | CNN       | MLP        | 0.5884  | 4.092    |
 | CNN       | CNN        | 1       | 7.031    |
 | CNN       | ANN        | 0.9982  | 7.065    |
-
-//Training time too long, to be calculated on our own data set
-1. Metrics are saved in two dictionaries: Solver.eval_stats and Solver.train_stats
-2. Solver.print_msg is called during every validation, change "valid_step" parmas in the config file to change the printing frequency
-3. ctc_weight is set to 1.0 to omit the training of attention networks, to speed up training process
-4. Training Command: ```python main.py --config config/libri/asr_example.yaml --njobs 8``` 
-
