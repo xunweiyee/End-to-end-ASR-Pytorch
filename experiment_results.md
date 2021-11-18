@@ -3,21 +3,21 @@ Investigating performance of Feature Extractor
 TedSrt =====================================================================
 
 
-| Extractor | Classifier |CTC-WER|ATT-WER|CTC-Loss
-|---------|-------------|-------|-----|---|
-| MLP    | RNN|0.27276| |0.46318 |
-| CNN  | RNN|0.26054|//|0.00942|
-| ANN  | RNN| | |
-| RNN   | RNN |
+| Extractor | Classifier |CTC-WER|CTC-Loss
+|---------|-------------|------------|---|
+| MLP    | RNN|0.99|6.58 |
+| CNN  | RNN|0.92|6.56|
+| ANN  | RNN|1|6.92|
+| RNN   | RNN | |
 
 
 Investigating performance of Classifier
 
-| Extractor | Classifier |CTC-WER|ATT-WER|CTC-Loss
-|---------|-------------|-------|-----|---|
-| CNN    | MLP|0.26984 |//| 2.61415  | 
-| CNN  | CNN|
-| CNN  | ANN|
+| Extractor | Classifier |CTC-WER|CTC-Loss
+|---------|-------------|------------|---|
+| CNN    | MLP|0.90 |5.746| 
+| CNN  | CNN|0.9503|6.745|
+| CNN  | ANN|0.99|6.98|
 
 LibriSpeech ===================================================================
 
