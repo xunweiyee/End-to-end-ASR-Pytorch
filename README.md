@@ -83,6 +83,11 @@ Secondly, we fix the Extractor to be CNN. and replace the classifier with the 4 
 
 
 
+## Featured Notebook
+* [Notebook](project_group40_notebook.ipynb)
+
+
+
 ---
 
 Original README can be accessed [here](https://github.com/Alexander-H-Liu/End-to-end-ASR-Pytorch/blob/master/README.md).
