@@ -1,6 +1,6 @@
 # Experiment Results
 
-### TedSrt
+## TedSrt
 
 > 200 MB of audio data was scraped from [Ted2Srt](https://ted2srt.org/). We tried training on 1 GB of dataset but the results were roughly similar.
 
@@ -29,7 +29,7 @@ Comparing performance of Classifier
 
 ---
 
-### LibriSpeech
+## LibriSpeech
 
 > This is a public dataset by [OpenSLR](https://www.openslr.org/12/). The repository is already designed to accommodate this dataset.
 
