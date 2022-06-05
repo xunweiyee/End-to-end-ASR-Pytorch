@@ -83,19 +83,20 @@ Secondly, we fix the Extractor to be CNN. and replace the classifier with the 4 
 
 
 
-### Module Code: **CS5242** 
+---
 
-#### Semester: AY2021-22 Sem 1
-#### Group 40
+Original README can be accessed [here](https://github.com/Alexander-H-Liu/End-to-end-ASR-Pytorch/blob/master/README.md).
+
+
+
+## Module Code: **CS5242** 
+
+### Semester: AY2021-22 Sem 1
+### Group 40
 - Liu Shiru (A0187939A)
 - Lim Yu Rong, Samuel (A0183921A)
 - Yee Xun Wei (A0228597L)
 
-
-
----
-
-Original README can be accessed [here](https://github.com/Alexander-H-Liu/End-to-end-ASR-Pytorch/blob/master/README.md).
 
 
 ## Reference
