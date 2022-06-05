@@ -1,13 +1,5 @@
 # End-to-end Automatic Speech Recognition Systems - PyTorch Implementation
 
-### Module Code: **CS5242** 
-
-#### Semester: AY2021-22 Sem 1
-#### Group 40
-- Liu Shiru (A0187939A)
-- Lim Yu Rong, Samuel (A0183921A)
-- Yee Xun Wei (A0228597L)
-
 
 
 ## Dependencies
@@ -88,6 +80,16 @@ For our experimentation we firstly fix the classifier to be RNN, and compare how
 </p>
 
 Secondly, we fix the Extractor to be CNN. and replace the classifier with the 4 NN variants.
+
+
+
+### Module Code: **CS5242** 
+
+#### Semester: AY2021-22 Sem 1
+#### Group 40
+- Liu Shiru (A0187939A)
+- Lim Yu Rong, Samuel (A0183921A)
+- Yee Xun Wei (A0228597L)
 
 
 
