@@ -3,15 +3,13 @@
 
 
 ## Dependencies
-
 - Python 3
 - Computing power (high-end GPU) and memory space (both RAM/GPU's RAM) is **extremely important** if you'd like to train your own model.
 - Required packages and their use are listed [requirements.txt](requirements.txt).
 
-
+---
 
 ## Dataset
-
 Data is collected from the [Ted2srt webpage](https://ted2srt.org "Ted2srt Homepage").
 
 Run `python3 scraper/preprocess.py` from root directory to scrape and generate dataset.
@@ -25,13 +23,11 @@ Scraped data is saved at `scraper/data/`, processed data will be saved to `data/
 
 
 ## Training
-
 To train each model:
 
 1. In the root directory, run the command `python3 main.py --config config/<dataset>/<config_file>.yaml --njobs 8`.
 
 ### Configuration Files
-
 To use our dataset, set `<dataset>` as `ted` to use scraped data, or `libri` to use public data from [OpenSRL](https://www.openslr.org/12/).
 
 Configuration files are stored as:
@@ -56,13 +52,11 @@ Configuration files are stored as:
 
 
 ## Experiment results
-
 Experiment results are stored at [experiment_results.md](experiment_results.md).
 
 
 
 ## Model Architecture
-
 <p align="center">
   <img src="assets/model_architecture.png" height="300">
 </p>
@@ -80,6 +74,102 @@ For our experimentation we firstly fix the classifier to be RNN, and compare how
 </p>
 
 Secondly, we fix the Extractor to be CNN. and replace the classifier with the 4 NN variants.
+
+---
+
+## Implementation
+### Data Preprocessing
+Preprocess scraped data to input into `Dataset` and `DataLoader`. Includes data cleaning, cutting audio into multiple audio slices according to SRT annotated time and prepare label for each audio slice.
+
+#### Data Preprocessing Inputs/Outputs
+- Input from scraped audio files and SRT.
+- Output preprocessed ready dataset for ASR.
+
+#### Data Preprocessing Descriptions
+Symbols are removed from label and converted to lowercase.
+
+Data that are less accurate are removed. Checking done for SRT that starts at the same time (e.g. `00:00:12,820 --> 00:00:14,820`). SRT that does not include introduction music time is filtered. Laughter and applause is removed.
+
+Raw SRT snippet
+```
+1
+00:00:12,312 --> 00:00:14,493
+Six months ago, I got an email
+
+2
+00:00:14,493 --> 00:00:15,900
+from a man in Israel
+```
+converted to
+```
+<audio_id>-1 six months ago i got an email
+<audio_id>-2 from a man in israel
+```
+and stored at `<audio_id>.trans.txt`. Corresponding sliced audio files are named `<audio_id>_<audio_index>.mp3`.
+
+After `build_dataset()` has preprocessed the data, the data is split into  train-dev-test sets.
+
+
+
+### Data Exploration
+
+#### Audio metadata of an audio slice
+```
+Sample Rate: 44100
+Shape: (1, 84055)
+Dtype: torch.float32
+ - Max:          0.523
+ - Min:         -0.319
+ - Mean:        -0.000
+ - Std Dev:      0.081
+ ```
+
+#### Audio signal
+![](assets/waveform.png)
+
+Waveform plot of sample audio signal with length of 1.9s. Duration length can obtained: `signal_frames / sample_rate`.
+
+#### Spectrogram of raw audio signal
+![](assets/spectogram.png)
+
+
+
+### Data Processing
+Steps to compute filter banks are motivated to mimic how human perceives audio signals<sup>[[1]](#reference)</sup>.
+
+1. Apply pre-emphasis filter on audio signal (amplify the high frequencies since high frequencies have smaller magnitude).
+2. Cut signal into window frames (assume signal is stationary over a short period time).
+3. Compute the power spectrum of the signal (Fourier transform) for each window.
+
+
+Kaldi filter banks transformation applied on audio signals. 40 mel coefficients is kept.
+``` python
+feat_dim = 40
+waveform_trans = torchaudio.compliance.kaldi.fbank(signal, frame_length=25, frame_shift=10, num_mel_bins=feat_dim)
+plot_spectrogram(waveform_trans.transpose(0, 1).detach(), title="Filter Banks", ylabel='mel bins')
+```
+
+![](assets/filterbanks.png)
+
+### Extractors
+Extractor generates a sequence of feature vectors. Each feature vector is extracted from a small overlapped window of audio frames. Extractor transforms $x$, to high-level representation $h = (h_1, ..., h_L)$.
+
+Extractor includes downsampling of timesteps.
+
+![](assets/downsampled.png)
+
+For example downsampling by a factor of 4 from 523 timesteps to 130 timesteps in RNN extractor. Downsampling is also achieved by MaxPooling of CNN extractors.
+
+### Classifiers
+
+Classifier generates an output sequence $(y_1, . . . , y_T)$ from input $h$. $h$ is the output of the extractor. The classifier's output $y$ is a sequence of word tokens. The sequence $y$ is expected to include a dimension of the same size as $h$.
+
+
+
+
+
+
+
 
 
 
